@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: auth-service
+  cloud:
+    config:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/wallet_auth_db
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: shashwatdtech@gmail.com
+    password: ndffisrppoixphsr
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    from: shashwatdtech@gmail.com
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8061/eureka/
+
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  from-number: ${TWILIO_FROM_NUMBER}
+
+server:
+  port: 8063
+
+security:
+  jwt:
+    # Base64 encoded 256-bit secret shared with API Gateway for signature verification.
+    secret: ${JWT_SECRET:Q2FwZ2VtaW5pV2FsbGV0SldUU2VjcmV0S2V5Rm9yR2F0ZXdheUFuZFNlcnZpY2VzMTIzNDU2}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  bootstrap-admin:
+    username: ${BOOTSTRAP_ADMIN_USERNAME:admin}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:Admin@123}
+

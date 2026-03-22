@@ -1,0 +1,23 @@
+server:
+  port: 8060
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${GIT_URI:https://github.com/SHA-shwatdubey/Digital_wallet.git}
+          default-label: main
+          clone-on-start: true
+          search-paths: github-config
+          username: ${GIT_USERNAME:}
+          password: ${GIT_PAT:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+

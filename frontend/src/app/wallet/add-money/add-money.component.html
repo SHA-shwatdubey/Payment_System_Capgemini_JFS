@@ -1,0 +1,144 @@
+<section class="max-w-4xl mx-auto pb-12">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Add Money</h1>
+      <p class="text-gray-400 mt-2">Top up your wallet instantly</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Payment Methods Info -->
+    <div class="lg:col-span-1">
+      <div class="bg-[#131B2C] rounded-2xl p-6 border border-gray-800 sticky top-20">
+        <h3 class="text-lg font-bold text-white mb-4">Payment Methods</h3>
+        <div class="space-y-3">
+          <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700">
+            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" /><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clip-rule="evenodd" /></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-white">UPI</p>
+              <p class="text-xs text-gray-400">Instant</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700">
+            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4z" /></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-white">Card</p>
+              <p class="text-xs text-gray-400">Secure</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800/30 border border-gray-700">
+            <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-white">Net Banking</p>
+              <p class="text-xs text-gray-400">Safe</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+          <div class="flex items-start space-x-2">
+            <svg class="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" /></svg>
+            <p class="text-xs text-cyan-300">All transactions are encrypted and secured with bank-level protection.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Money Form -->
+    <div class="lg:col-span-2">
+      <div class="bg-[#131B2C] rounded-2xl p-8 border border-gray-800 shadow-xl">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+          <!-- Amount Input -->
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-white">Amount (₹)</label>
+            <div class="relative group">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <span class="text-2xl text-gray-500 group-focus-within:text-cyan-400 transition-colors">₹</span>
+              </div>
+              <input
+                type="number"
+                formControlName="amount"
+                placeholder="Enter amount to add"
+                class="w-full bg-[#0A0F18] border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all" />
+            </div>
+            <p class="text-xs text-gray-500">Min: ₹100 | Max: ₹100,000</p>
+          </div>
+
+          <!-- Quick Amount Buttons -->
+          <div>
+            <label class="text-sm font-semibold text-white mb-3 block">Quick Amounts</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button type="button" (click)="setAmount(500)" class="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 text-sm font-medium text-white transition">
+                ₹500
+              </button>
+              <button type="button" (click)="setAmount(1000)" class="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 text-sm font-medium text-white transition">
+                ₹1K
+              </button>
+              <button type="button" (click)="setAmount(5000)" class="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 text-sm font-medium text-white transition">
+                ₹5K
+              </button>
+              <button type="button" (click)="setAmount(10000)" class="p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 text-sm font-medium text-white transition">
+                ₹10K
+              </button>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-white">Payment Method</label>
+            <select
+              formControlName="method"
+              class="w-full bg-[#0A0F18] border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
+              <option value="UPI">UPI (Fastest)</option>
+              <option value="CARD">Credit/Debit Card</option>
+              <option value="NETBANKING">Net Banking</option>
+            </select>
+          </div>
+
+          <!-- Summary -->
+          <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-gray-400">Amount:</span>
+              <span class="text-white font-semibold">₹{{ form.value.amount || 0 | number }}</span>
+            </div>
+            <div class="flex justify-between items-center pb-2 border-b border-gray-700">
+              <span class="text-gray-400">Processing Fee:</span>
+              <span class="text-white font-semibold">Free</span>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <span class="text-white font-semibold">Total Payable:</span>
+              <span class="text-cyan-400 font-bold text-lg">₹{{ form.value.amount || 0 | number }}</span>
+            </div>
+          </div>
+
+          <!-- Error/Success Messages -->
+          <div *ngIf="error" class="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+            <p class="text-sm text-red-400">{{ error }}</p>
+          </div>
+          <div *ngIf="message" class="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+            <p class="text-sm text-green-400">{{ message }}</p>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="loading || form.invalid"
+            class="w-full relative group overflow-hidden rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-3.5 font-semibold text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20">
+            <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+            <span class="relative">{{ loading ? 'Processing Payment...' : 'Add Money Now' }}</span>
+          </button>
+
+          <p class="text-xs text-center text-gray-500">
+            By proceeding, you agree to our payment terms and privacy policy
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+

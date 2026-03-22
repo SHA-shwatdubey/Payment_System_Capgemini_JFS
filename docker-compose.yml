@@ -1,0 +1,245 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: wallet-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/init/01-create-databases.sql:/docker-entrypoint-initdb.d/01-create-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: wallet-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: native
+      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo
+    ports:
+      - "8060:8060"
+    volumes:
+      - ./github-config:/config-repo:ro
+    depends_on:
+      - postgres
+
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8061:8061"
+    depends_on:
+      - config-server
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8062:8062"
+    depends_on:
+      - eureka-server
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "8051:80"
+    depends_on:
+      - api-gateway
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    environment:
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: root
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER}
+    ports:
+      - "8063:8063"
+    depends_on:
+      - postgres
+      - eureka-server
+
+  user-kyc-service:
+    build:
+      context: ./user-kyc-service
+      dockerfile: Dockerfile
+    container_name: user-kyc-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+    ports:
+      - "8064:8064"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - config-server
+      - eureka-server
+
+  wallet-service:
+    build:
+      context: ./wallet-service
+      dockerfile: Dockerfile
+    container_name: wallet-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+      NOTIFICATION_SERVICE_URL: http://notification-service:8069
+    ports:
+      - "8065:8065"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+
+  rewards-service:
+    build:
+      context: ./rewards-service
+      dockerfile: Dockerfile
+    container_name: rewards-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+      NOTIFICATION_SERVICE_URL: http://notification-service:8069
+    ports:
+      - "8066:8066"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+
+  admin-service:
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    container_name: admin-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+    ports:
+      - "8067:8067"
+    depends_on:
+      - postgres
+      - config-server
+      - eureka-server
+
+  transaction-service:
+    build:
+      context: ./transaction-service
+      dockerfile: Dockerfile
+    container_name: transaction-service
+    restart: unless-stopped
+    environment:
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+      SPRING_PROFILES_ACTIVE: docker
+      TRANSACTION_DB_URL: jdbc:postgresql://postgres:5432/transaction_db
+      TRANSACTION_DB_USERNAME: postgres
+      TRANSACTION_DB_PASSWORD: root
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      EUREKA_URL: http://eureka-server:8061/eureka/
+    ports:
+      - "8068:8068"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      NOTIFICATION_DB_URL: jdbc:postgresql://postgres:5432/notification_db
+      NOTIFICATION_DB_USERNAME: postgres
+      NOTIFICATION_DB_PASSWORD: root
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+    ports:
+      - "8069:8069"
+    depends_on:
+      - postgres
+      - rabbitmq
+      - eureka-server
+
+  integration-service:
+    build:
+      context: ./integration-service
+      dockerfile: Dockerfile
+    container_name: integration-service
+    restart: unless-stopped
+    environment:
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8060
+      SPRING_PROFILES_ACTIVE: docker
+      INTEGRATION_DB_URL: jdbc:postgresql://postgres:5432/integration_db
+      INTEGRATION_DB_USERNAME: postgres
+      INTEGRATION_DB_PASSWORD: root
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+    ports:
+      - "8070:8070"
+    depends_on:
+      - postgres
+      - eureka-server
+
+volumes:
+  postgres_data:
+

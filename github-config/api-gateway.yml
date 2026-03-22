@@ -1,0 +1,142 @@
+server:
+  port: 8062
+
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - Authorization
+            allowCredentials: false
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        - id: user-kyc-service
+          uri: lb://user-kyc-service
+          predicates:
+            - Path=/api/users/**,/api/kyc/**,/api/support/users/**
+        - id: wallet-service
+          uri: lb://wallet-service
+          predicates:
+            - Path=/api/wallet/**
+        - id: rewards-service
+          uri: lb://rewards-service
+          predicates:
+            - Path=/api/rewards/**
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**,/api/campaigns/**
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/transactions/**,/api/transactions/**,/api/disputes/**,/api/support/disputes/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+        - id: integration-service
+          uri: lb://integration-service
+          predicates:
+            - Path=/api/integrations/**
+        - id: auth-service-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/v3/api-docs/auth-service
+          filters:
+            - RewritePath=/v3/api-docs/auth-service,/v3/api-docs
+        - id: user-kyc-service-docs
+          uri: lb://user-kyc-service
+          predicates:
+            - Path=/v3/api-docs/user-kyc-service
+          filters:
+            - RewritePath=/v3/api-docs/user-kyc-service,/v3/api-docs
+        - id: wallet-service-docs
+          uri: lb://wallet-service
+          predicates:
+            - Path=/v3/api-docs/wallet-service
+          filters:
+            - RewritePath=/v3/api-docs/wallet-service,/v3/api-docs
+        - id: rewards-service-docs
+          uri: lb://rewards-service
+          predicates:
+            - Path=/v3/api-docs/rewards-service
+          filters:
+            - RewritePath=/v3/api-docs/rewards-service,/v3/api-docs
+        - id: admin-service-docs
+          uri: lb://admin-service
+          predicates:
+            - Path=/v3/api-docs/admin-service
+          filters:
+            - RewritePath=/v3/api-docs/admin-service,/v3/api-docs
+        - id: transaction-service-docs
+          uri: lb://transaction-service
+          predicates:
+            - Path=/v3/api-docs/transaction-service
+          filters:
+            - RewritePath=/v3/api-docs/transaction-service,/v3/api-docs
+        - id: notification-service-docs
+          uri: lb://notification-service
+          predicates:
+            - Path=/v3/api-docs/notification-service
+          filters:
+            - RewritePath=/v3/api-docs/notification-service,/v3/api-docs
+        - id: integration-service-docs
+          uri: lb://integration-service
+          predicates:
+            - Path=/v3/api-docs/integration-service
+          filters:
+            - RewritePath=/v3/api-docs/integration-service,/v3/api-docs
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    persistAuthorization: true
+    urlsPrimaryName: API Gateway
+    urls:
+      - name: API Gateway
+        url: /v3/api-docs
+      - name: Auth Service
+        url: /v3/api-docs/auth-service
+      - name: User KYC Service
+        url: /v3/api-docs/user-kyc-service
+      - name: Wallet Service
+        url: /v3/api-docs/wallet-service
+      - name: Rewards Service
+        url: /v3/api-docs/rewards-service
+      - name: Admin Service
+        url: /v3/api-docs/admin-service
+      - name: Transaction Service
+        url: /v3/api-docs/transaction-service
+      - name: Notification Service
+        url: /v3/api-docs/notification-service
+      - name: Integration Service
+        url: /v3/api-docs/integration-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+gateway:
+  rate-limit:
+
+    requests-per-minute: ${GATEWAY_RATE_LIMIT_RPM:120}

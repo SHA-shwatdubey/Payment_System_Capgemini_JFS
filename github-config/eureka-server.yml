@@ -1,0 +1,24 @@
+server:
+  port: 8061
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  server:
+    # Disable eviction protection when renewals are below threshold
+    enable-self-preservation: false
+    # Time for which a lease will not be cancelled if heartbeats are lost
+    eviction-interval-timer-in-ms: 5000
+    # Expected client heartbeat rate
+    expected-client-renewal-interval-seconds: 30
+    # If the number of heartbeats from the clients becomes less than this threshold
+    renewal-percent-threshold: 0.5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+

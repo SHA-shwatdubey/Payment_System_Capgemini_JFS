@@ -1,0 +1,20 @@
+.filters {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: 1fr 1fr auto;
+}
+
+.pager {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.8rem;
+}
+
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}
+

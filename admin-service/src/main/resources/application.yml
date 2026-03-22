@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: admin-service
+  config:
+    import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: integration-service
+  config:
+    import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}
+  datasource:
+    url: ${INTEGRATION_DB_URL:jdbc:postgresql://localhost:5432/integration_db}
+    username: ${INTEGRATION_DB_USERNAME:postgres}
+    password: ${INTEGRATION_DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8070
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8061/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+

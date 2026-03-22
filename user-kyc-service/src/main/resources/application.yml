@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: user-kyc-service
+  config:
+    import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+

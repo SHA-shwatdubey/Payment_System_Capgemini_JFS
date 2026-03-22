@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: wallet-service
+  config:
+    import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}
+
+

@@ -1,0 +1,14 @@
+.auth-shell {
+  animation: gradientShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes gradientShift {
+  from {
+    filter: saturate(1);
+  }
+  to {
+    filter: saturate(1.15);
+  }
+}
+
+

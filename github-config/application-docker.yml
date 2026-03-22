@@ -1,0 +1,30 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8061/eureka/
+    # Register with Eureka
+    register-with-eureka: true
+    # Fetch registry from Eureka
+    fetch-registry: true
+    # Renewal interval (heartbeat) - every 30 seconds
+    instance-info-replication-interval-seconds: 30
+    # Initial delay for registration
+    initial-instance-info-replication-interval-seconds: 40
+  instance:
+    # Use service name so other containers (gateway) can resolve it on Docker network DNS.
+    hostname: ${spring.application.name}
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Lease renewal interval - 30 seconds
+    lease-renewal-interval-in-seconds: 30
+    # Lease expiration duration - 90 seconds
+    lease-expiration-duration-in-seconds: 90
+    # Prefer IP address over hostname
+    # Keep hostname-based discovery in Docker; HOSTNAME is often a container ID.
+    prefer-ip-address: false
+    # IP address
+    ip-address: ${HOSTNAME:localhost}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+springdoc:
+  swagger-ui:
+    persistAuthorization: true
