@@ -175,6 +175,10 @@ resource "aws_lb" "main" {
   tags = {
     Name = "${var.project_name}-alb"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # ALB Target Group
@@ -197,6 +201,11 @@ resource "aws_lb_target_group" "main" {
   tags = {
     Name = "${var.project_name}-tg"
   }
+
+  # Prevent deletion while still in use by listener
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # ALB Listener
@@ -209,6 +218,8 @@ resource "aws_lb_listener" "main" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.main.arn
   }
+
+  depends_on = [aws_lb_target_group.main]
 }
 
 # Outputs
@@ -241,3 +252,4 @@ output "alb_arn" {
   value       = aws_lb.main.arn
   description = "ALB ARN"
 }
+
