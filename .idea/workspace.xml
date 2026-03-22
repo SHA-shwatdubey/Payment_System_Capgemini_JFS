@@ -6,7 +6,19 @@
   <component name="ChangeListManager">
     <list default="true" id="77c77317-8c51-480a-bce2-d9b1899e8a8e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FINAL_DEPLOYMENT_INSTRUCTIONS.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/GITHUB_SECRETS_SETUP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/INSTANT_DEPLOY.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/QUICK_REFERENCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README_DEPLOYMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/READY_TO_DEPLOY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SETUP_CHECKLIST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/FIX_TARGET_GROUP_ERROR.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/GITHUB_ACTIONS_FIX.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/RECOVERY_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/SOLUTION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/VPC_LIMIT_FIX.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/VPC_LIMIT_QUICK_FIX.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
