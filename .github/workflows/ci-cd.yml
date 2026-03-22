@@ -58,10 +58,10 @@ jobs:
       - name: Run all tests
         run: mvn test -q
         env:
-          SPRING_CONFIG_IMPORT: optional:configserver:
+          SPRING_CONFIG_IMPORT: 'optional:configserver:'
           SPRING_PROFILES_ACTIVE: test
-          EUREKA_CLIENT_ENABLED: "false"
-          SPRING_CLOUD_CONFIG_ENABLED: "false"
+          EUREKA_CLIENT_ENABLED: 'false'
+          SPRING_CLOUD_CONFIG_ENABLED: 'false'
       
       - name: Upload test reports
         if: always()
