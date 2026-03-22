@@ -32,9 +32,9 @@ resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
 
 # EKS Cluster
 resource "aws_eks_cluster" "main" {
-  name            = "${var.project_name}-cluster"
-  role_arn        = aws_iam_role.eks_cluster.arn
-  version         = var.eks_kubernetes_version
+  name     = "${var.project_name}-cluster"
+  role_arn = aws_iam_role.eks_cluster.arn
+  version  = var.eks_kubernetes_version
 
   vpc_config {
     subnet_ids              = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
@@ -202,7 +202,9 @@ resource "aws_lb_target_group" "main" {
     Name = "${var.project_name}-tg"
   }
 
-  # Prevent deletion while still in use by listener
+  # Allow graceful deregistration of targets before deletion
+  deregistration_delay = 30
+
   lifecycle {
     create_before_destroy = true
   }
@@ -219,7 +221,8 @@ resource "aws_lb_listener" "main" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 
-  depends_on = [aws_lb_target_group.main]
+  # Note: Remove explicit depends_on on target_group to allow proper destruction order
+  # The listener will naturally depend on the target group through the target_group_arn reference
 }
 
 # Outputs
