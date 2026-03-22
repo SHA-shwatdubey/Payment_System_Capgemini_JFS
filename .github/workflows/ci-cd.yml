@@ -42,42 +42,42 @@ jobs:
           - 15672:15672
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    
-    - name: Build all modules
-      run: mvn clean package -DskipTests -q
-    
-    - name: Run all tests
-      run: mvn test -q
-      env:
-        SPRING_CONFIG_IMPORT: optional:configserver:
-        SPRING_PROFILES_ACTIVE: test
-        EUREKA_CLIENT_ENABLED: "false"
-        SPRING_CLOUD_CONFIG_ENABLED: "false"
-    
-    - name: Upload test reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-reports
-        path: |
-          **/target/surefire-reports/
-          **/target/failsafe-reports/
-        retention-days: 30
-    
-    - name: Test summary
-      if: always()
-      run: |
-        echo "## 🚀 Build and Test Summary" >> $GITHUB_STEP_SUMMARY
-        echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
-        echo "✅ All tests executed" >> $GITHUB_STEP_SUMMARY
-        echo "📊 Test artifacts uploaded for 30 days" >> $GITHUB_STEP_SUMMARY
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Build all modules
+        run: mvn clean package -DskipTests -q
+      
+      - name: Run all tests
+        run: mvn test -q
+        env:
+          SPRING_CONFIG_IMPORT: optional:configserver:
+          SPRING_PROFILES_ACTIVE: test
+          EUREKA_CLIENT_ENABLED: "false"
+          SPRING_CLOUD_CONFIG_ENABLED: "false"
+      
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+          retention-days: 30
+      
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## 🚀 Build and Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All tests executed" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Test artifacts uploaded for 30 days" >> $GITHUB_STEP_SUMMARY
 
