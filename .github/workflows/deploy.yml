@@ -13,11 +13,16 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   MAVEN_OPTS: -Dmaven.compiler.parameters=true
   REGISTRY: docker.io
   REGISTRY_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   AWS_REGION: ap-south-1
+  TF_IN_AUTOMATION: true
 
 jobs:
   # ============================================
@@ -166,7 +171,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
       
       - name: 🔧 Terraform Init
-        run: terraform init
+        run: terraform init -input=false -reconfigure
         working-directory: terraform
       
       - name: 📋 Terraform Format Check
@@ -180,58 +185,24 @@ jobs:
 
       - name: 🔄 Import existing AWS resources (idempotent)
         working-directory: terraform
+        shell: bash
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_nat_gateway_count: "1"
+          TF_VAR_db_instance_class: "db.t3.micro"
         run: |
-          set +e
-          PROJECT="payment-system-capgemini"
-
-          # IAM roles
-          aws iam get-role --role-name "${PROJECT}-eks-cluster-role" >/dev/null 2>&1
-          [ $? -eq 0 ] && terraform import aws_iam_role.eks_cluster "${PROJECT}-eks-cluster-role" || true
-
-          aws iam get-role --role-name "${PROJECT}-eks-node-group-role" >/dev/null 2>&1
-          [ $? -eq 0 ] && terraform import aws_iam_role.eks_node_group "${PROJECT}-eks-node-group-role" || true
-
-          # EKS cluster (if already created in previous partial run)
-          aws eks describe-cluster --name "${PROJECT}-cluster" >/dev/null 2>&1
-          [ $? -eq 0 ] && terraform import aws_eks_cluster.main "${PROJECT}-cluster" || true
-
-          # CloudWatch log group
-          aws logs describe-log-groups --log-group-name-prefix "/aws/eks/${PROJECT}-cluster/cluster" --query 'logGroups[0].logGroupName' --output text 2>/dev/null | grep -q "/aws/eks/${PROJECT}-cluster/cluster"
-          [ $? -eq 0 ] && terraform import aws_cloudwatch_log_group.eks "/aws/eks/${PROJECT}-cluster/cluster" || true
-
-          # ECR repositories
-          SERVICES="config-server eureka-server api-gateway auth-service user-kyc-service wallet-service notification-service rewards-service transaction-service integration-service admin-service"
-          for svc in $SERVICES; do
-            repo="${PROJECT}-${svc}"
-            aws ecr describe-repositories --repository-names "$repo" >/dev/null 2>&1
-            [ $? -eq 0 ] && terraform import "aws_ecr_repository.services[\"$svc\"]" "$repo" || true
-          done
-
-          # ALB and Target Group
-          alb_arn=$(aws elbv2 describe-load-balancers --names "${PROJECT}-alb" --query 'LoadBalancers[0].LoadBalancerArn' --output text 2>/dev/null)
-          [ -n "$alb_arn" ] && [ "$alb_arn" != "None" ] && terraform import aws_lb.main "$alb_arn" || true
-
-          tg_arn=$(aws elbv2 describe-target-groups --names "${PROJECT}-tg" --query 'TargetGroups[0].TargetGroupArn' --output text 2>/dev/null)
-          [ -n "$tg_arn" ] && [ "$tg_arn" != "None" ] && terraform import aws_lb_target_group.main "$tg_arn" || true
-
-          # RDS subnet group and DB instance
-          aws rds describe-db-subnet-groups --db-subnet-group-name "${PROJECT}-db-subnet-group" >/dev/null 2>&1
-          [ $? -eq 0 ] && terraform import aws_db_subnet_group.main "${PROJECT}-db-subnet-group" || true
-
-          aws rds describe-db-instances --db-instance-identifier "${PROJECT}-db" >/dev/null 2>&1
-          [ $? -eq 0 ] && terraform import aws_db_instance.main "${PROJECT}-db" || true
+          chmod +x ./import_existing_resources.sh
+          ./import_existing_resources.sh
      
 
       - name: 📊 Terraform Plan
         run: |
-          terraform plan -out=tfplan
+          terraform plan -input=false -lock-timeout=10m -out=tfplan
         working-directory: terraform
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_nat_gateway_count: "1"
+          TF_VAR_db_instance_class: "db.t3.micro"
 
       - name: 📤 Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -242,11 +213,12 @@ jobs:
 
       - name: 🚀 Terraform Apply
         run: |
-          terraform apply -auto-approve tfplan
+          terraform apply -input=false -lock-timeout=10m -auto-approve tfplan
         working-directory: terraform
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
           TF_VAR_nat_gateway_count: "1"
+          TF_VAR_db_instance_class: "db.t3.micro"
 
       - name: 📍 Get Terraform Outputs
         id: terraform
