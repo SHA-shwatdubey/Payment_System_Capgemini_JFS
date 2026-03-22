@@ -206,7 +206,7 @@ resource "aws_lb_target_group" "main" {
   deregistration_delay = 30
 
   lifecycle {
-    create_before_destroy = true
+    create_before_destroy = false
   }
 }
 
@@ -221,8 +221,9 @@ resource "aws_lb_listener" "main" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 
-  # Note: Remove explicit depends_on on target_group to allow proper destruction order
-  # The listener will naturally depend on the target group through the target_group_arn reference
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Outputs

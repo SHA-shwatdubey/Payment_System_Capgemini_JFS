@@ -14,16 +14,17 @@ This happens because the listener still references the target group when Terrafo
 
 I've updated `eks.tf` with the following improvements:
 
-1. **Removed explicit `depends_on`** from the ALB listener
-   - The implicit dependency through `target_group_arn` is sufficient
-   - This allows proper destruction order: Listener → Target Group
+1. **Set `create_before_destroy = false`** on the target group
+   - This prevents trying to create new target group while old one is still referenced
+   - Forces proper destruction order
 
 2. **Added `deregistration_delay = 30`** to the target group
    - Gives 30 seconds for in-flight requests to complete
    - Prevents AWS from blocking target group deletion
 
-3. **Kept `create_before_destroy = true`** in both resources
-   - Allows safe replacement if needed
+3. **Added `lifecycle { create_before_destroy = true }`** to the ALB listener
+   - Listener gets replaced first during updates
+   - Removes reference before target group deletion is attempted
 
 ---
 
@@ -159,4 +160,5 @@ Once destroyed, you can safely:
 - Or: `terraform init && terraform apply`
 
 The fixes in `eks.tf` will prevent this issue on future runs.
+
 
