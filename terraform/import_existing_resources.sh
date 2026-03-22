@@ -35,11 +35,14 @@ if [[ -n "${vpc_id}" && "${vpc_id}" != "None" ]]; then
   igw_id="$(aws ec2 describe-internet-gateways --region "${REGION}" --filters "Name=attachment.vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-igw" --query 'InternetGateways[0].InternetGatewayId' --output text 2>/dev/null || true)"
   [[ -n "${igw_id}" && "${igw_id}" != "None" ]] && (terraform state show aws_internet_gateway.main >/dev/null 2>&1 || terraform import aws_internet_gateway.main "${igw_id}" || true)
 
-  eip_alloc_id="$(aws ec2 describe-addresses --region "${REGION}" --filters "Name=tag:Name,Values=${PROJECT}-eip-1" --query 'Addresses[0].AllocationId' --output text 2>/dev/null || true)"
-  [[ -n "${eip_alloc_id}" && "${eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${eip_alloc_id}" || true)
+  # Import NAT first, then import the exact EIP allocation attached to that NAT.
+  nat_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --filter "Name=vpc-id,Values=${vpc_id}" "Name=state,Values=available,pending" --query 'NatGateways[0].NatGatewayId' --output text 2>/dev/null || true)"
+  if [[ -n "${nat_id}" && "${nat_id}" != "None" ]]; then
+    terraform state show 'aws_nat_gateway.main[0]' >/dev/null 2>&1 || terraform import 'aws_nat_gateway.main[0]' "${nat_id}" || true
 
-  nat_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --filter "Name=vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-nat-1" --query 'NatGateways[0].NatGatewayId' --output text 2>/dev/null || true)"
-  [[ -n "${nat_id}" && "${nat_id}" != "None" ]] && (terraform state show 'aws_nat_gateway.main[0]' >/dev/null 2>&1 || terraform import 'aws_nat_gateway.main[0]' "${nat_id}" || true)
+    eip_alloc_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --nat-gateway-ids "${nat_id}" --query 'NatGateways[0].NatGatewayAddresses[0].AllocationId' --output text 2>/dev/null || true)"
+    [[ -n "${eip_alloc_id}" && "${eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${eip_alloc_id}" || true)
+  fi
 
   public_rt_id="$(aws ec2 describe-route-tables --region "${REGION}" --filters "Name=vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-public-rt" --query 'RouteTables[0].RouteTableId' --output text 2>/dev/null || true)"
   private_rt_id="$(aws ec2 describe-route-tables --region "${REGION}" --filters "Name=vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-private-rt" --query 'RouteTables[0].RouteTableId' --output text 2>/dev/null || true)"
@@ -83,6 +86,11 @@ import_if_exists "aws_cloudwatch_log_group.eks" \
 import_if_exists "aws_eks_cluster.main" \
   "aws eks describe-cluster --name ${PROJECT}-cluster --region ${REGION}" \
   "${PROJECT}-cluster"
+
+# Ensure cluster import happened if cluster exists in AWS.
+if aws eks describe-cluster --name "${PROJECT}-cluster" --region "${REGION}" >/dev/null 2>&1; then
+  terraform state show aws_eks_cluster.main >/dev/null 2>&1 || terraform import aws_eks_cluster.main "${PROJECT}-cluster" || true
+fi
 
 services=(
   config-server
