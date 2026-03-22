@@ -18,7 +18,13 @@ import_if_exists() {
 echo "== Importing existing resources for project: ${PROJECT} (region: ${REGION}) =="
 
 # Core network resources (prevents VPC re-creation on stateless runners)
-vpc_id="$(aws ec2 describe-vpcs --region "${REGION}" --filters "Name=tag:Name,Values=${PROJECT}-vpc" --query 'Vpcs[0].VpcId' --output text 2>/dev/null || true)"
+# Prefer the VPC behind the current project ALB to avoid importing a stale duplicate VPC.
+alb_vpc_id="$(aws elbv2 describe-load-balancers --region "${REGION}" --names "${PROJECT}-alb" --query 'LoadBalancers[0].VpcId' --output text 2>/dev/null || true)"
+if [[ -n "${alb_vpc_id}" && "${alb_vpc_id}" != "None" ]]; then
+  vpc_id="${alb_vpc_id}"
+else
+  vpc_id="$(aws ec2 describe-vpcs --region "${REGION}" --filters "Name=tag:Name,Values=${PROJECT}-vpc" --query 'Vpcs[0].VpcId' --output text 2>/dev/null || true)"
+fi
 if [[ -n "${vpc_id}" && "${vpc_id}" != "None" ]]; then
   terraform state show aws_vpc.main >/dev/null 2>&1 || terraform import aws_vpc.main "${vpc_id}" || true
 
@@ -42,6 +48,10 @@ if [[ -n "${vpc_id}" && "${vpc_id}" != "None" ]]; then
 
     eip_alloc_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --nat-gateway-ids "${nat_id}" --query 'NatGateways[0].NatGatewayAddresses[0].AllocationId' --output text 2>/dev/null || true)"
     [[ -n "${eip_alloc_id}" && "${eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${eip_alloc_id}" || true)
+  else
+    # If NAT does not exist yet in this VPC, import the intended project EIP if present.
+    tagged_eip_alloc_id="$(aws ec2 describe-addresses --region "${REGION}" --filters "Name=tag:Name,Values=${PROJECT}-eip-1" --query 'Addresses[0].AllocationId' --output text 2>/dev/null || true)"
+    [[ -n "${tagged_eip_alloc_id}" && "${tagged_eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${tagged_eip_alloc_id}" || true)
   fi
 
   public_rt_id="$(aws ec2 describe-route-tables --region "${REGION}" --filters "Name=vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-public-rt" --query 'RouteTables[0].RouteTableId' --output text 2>/dev/null || true)"
