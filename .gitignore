@@ -9,6 +9,25 @@ target/
 .env.local
 .env.*.local
 
+# Terraform
+terraform/*.tfvars
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/crash.log
+terraform/crash.*.log
+terraform/.terraformrc
+terraform/terraform.rc
+terraform/*.pem
+
+# AWS Credentials
+aws/credentials
+.aws/credentials
+.aws/config
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
