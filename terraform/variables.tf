@@ -17,6 +17,18 @@ variable "environment" {
 }
 
 # EKS Variables
+variable "eks_kubernetes_version" {
+  description = "EKS Kubernetes version for cluster and node group"
+  type        = string
+  default     = "1.30"
+}
+
+variable "eks_node_ami_type" {
+  description = "AMI type for EKS managed node group"
+  type        = string
+  default     = "AL2023_x86_64_STANDARD"
+}
+
 variable "node_instance_type" {
   description = "EC2 Instance Type for EKS Nodes"
   type        = string
@@ -80,9 +92,14 @@ variable "db_multi_az" {
   default     = false
 }
 
+variable "db_backup_retention_period" {
+  description = "RDS backup retention in days (set low for free-tier constrained accounts)"
+  type        = number
+  default     = 1
+}
+
 variable "skip_final_snapshot" {
   description = "Skip final snapshot on destroy"
   type        = bool
   default     = true
 }
-

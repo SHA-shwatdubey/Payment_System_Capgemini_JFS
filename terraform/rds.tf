@@ -27,12 +27,12 @@ resource "aws_db_instance" "main" {
   vpc_security_group_ids          = [aws_security_group.rds.id]
   publicly_accessible             = false
 
-  multi_az            = var.db_multi_az
-  backup_retention_period         = 30
-  backup_window                   = "03:00-04:00"
-  maintenance_window              = "mon:04:00-mon:05:00"
-  skip_final_snapshot             = var.skip_final_snapshot
-  final_snapshot_identifier       = "${var.project_name}-db-final-snapshot"
+  multi_az                  = var.db_multi_az
+  backup_retention_period   = var.db_backup_retention_period
+  backup_window             = "03:00-04:00"
+  maintenance_window        = "mon:04:00-mon:05:00"
+  skip_final_snapshot       = var.skip_final_snapshot
+  final_snapshot_identifier = "${var.project_name}-db-final-snapshot"
 
   deletion_protection             = false
   enabled_cloudwatch_logs_exports = ["postgresql"]

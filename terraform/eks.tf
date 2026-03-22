@@ -34,7 +34,7 @@ resource "aws_iam_role_policy_attachment" "eks_vpc_resource_controller" {
 resource "aws_eks_cluster" "main" {
   name            = "${var.project_name}-cluster"
   role_arn        = aws_iam_role.eks_cluster.arn
-  version         = "1.28"
+  version         = var.eks_kubernetes_version
 
   vpc_config {
     subnet_ids              = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
@@ -108,7 +108,8 @@ resource "aws_eks_node_group" "main" {
   node_group_name = "${var.project_name}-node-group"
   node_role_arn   = aws_iam_role.eks_node_group.arn
   subnet_ids      = aws_subnet.private[*].id
-  version         = "1.28"
+  version         = var.eks_kubernetes_version
+  ami_type        = var.eks_node_ami_type
 
   scaling_config {
     desired_size = var.node_desired_size
@@ -240,4 +241,3 @@ output "alb_arn" {
   value       = aws_lb.main.arn
   description = "ALB ARN"
 }
-
