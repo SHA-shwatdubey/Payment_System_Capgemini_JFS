@@ -16,6 +16,12 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "nat_gateway_count" {
+  description = "Number of NAT gateways/EIPs to create (use 1 for dev/free-tier constraints)"
+  type        = number
+  default     = 1
+}
+
 # EKS Variables
 variable "eks_kubernetes_version" {
   description = "EKS Kubernetes version for cluster and node group"

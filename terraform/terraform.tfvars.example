@@ -1,6 +1,7 @@
 aws_region          = "ap-south-1"
 project_name        = "payment-system-capgemini"
 environment         = "dev"
+nat_gateway_count   = 1
 
 # EKS Configuration
 eks_kubernetes_version = "1.30"
