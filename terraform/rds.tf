@@ -61,5 +61,5 @@ output "rds_port" {
 output "rds_database_name" {
   value       = aws_db_instance.main.db_name
   description = "RDS Database Name"
+  sensitive   = true
 }
-
