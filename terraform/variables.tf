@@ -17,9 +17,9 @@ variable "environment" {
 }
 
 variable "nat_gateway_count" {
-  description = "Number of NAT gateways/EIPs to create (use 1 for dev/free-tier constraints)"
+  description = "Number of NAT gateways/EIPs to create (set 0 for free-tier constrained accounts)"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 # EKS Variables
@@ -38,7 +38,7 @@ variable "eks_node_ami_type" {
 variable "node_instance_type" {
   description = "EC2 Instance Type for EKS Nodes"
   type        = string
-  default     = "t3.large"
+  default     = "t3.micro"
 }
 
 variable "node_desired_size" {

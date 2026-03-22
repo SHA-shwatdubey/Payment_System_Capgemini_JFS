@@ -200,8 +200,9 @@ jobs:
         shell: bash
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "1"
+          TF_VAR_nat_gateway_count: "0"
           TF_VAR_db_instance_class: "db.t3.micro"
+          TF_VAR_node_instance_type: "t3.micro"
         run: |
           chmod +x ./import_existing_resources.sh
           ./import_existing_resources.sh
@@ -213,8 +214,9 @@ jobs:
         working-directory: terraform
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "1"
+          TF_VAR_nat_gateway_count: "0"
           TF_VAR_db_instance_class: "db.t3.micro"
+          TF_VAR_node_instance_type: "t3.micro"
 
       - name: 📤 Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -229,8 +231,9 @@ jobs:
         working-directory: terraform
         env:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "1"
+          TF_VAR_nat_gateway_count: "0"
           TF_VAR_db_instance_class: "db.t3.micro"
+          TF_VAR_node_instance_type: "t3.micro"
 
       - name: 📍 Get Terraform Outputs
         id: terraform
