@@ -49,8 +49,12 @@ jobs:
             echo "Pulling latest images..."
             compose_cmd pull
             
-            echo "Starting services..."
-            compose_cmd up -d
+            echo "Starting infra/core services first..."
+            compose_cmd up -d wallet-postgres wallet-rabbitmq config-server eureka-server
+            sleep 40
+
+            echo "Starting application services..."
+            compose_cmd up -d api-gateway auth-service user-kyc-service wallet-service rewards-service admin-service transaction-service notification-service integration-service frontend
             
             echo "Waiting for services to start..."
             sleep 30
