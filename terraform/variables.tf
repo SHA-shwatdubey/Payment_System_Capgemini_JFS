@@ -46,7 +46,7 @@ variable "eks_node_ami_type" {
 variable "node_instance_type" {
   description = "EC2 Instance Type for EKS Nodes"
   type        = string
-  default     = "t3.micro"
+  default     = "t2.micro"
 }
 
 variable "node_desired_size" {
@@ -69,9 +69,9 @@ variable "node_max_size" {
 
 # RDS Variables
 variable "db_instance_class" {
-  description = "RDS Instance Class (free-tier: db.t3.micro)"
+  description = "RDS Instance Class (free-tier: db.t2.micro)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t2.micro"
 }
 
 variable "db_allocated_storage" {
