@@ -1,5 +1,6 @@
 # RDS Subnet Group
 resource "aws_db_subnet_group" "main" {
+  count      = var.enable_rds ? 1 : 0
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
 
@@ -9,11 +10,12 @@ resource "aws_db_subnet_group" "main" {
 }
 
 locals {
+  create_rds                = var.enable_rds
   use_supplied_db_password = var.db_password != "" && length(trimspace(var.db_password)) >= 8
 }
 
 resource "random_password" "db_password" {
-  count            = local.use_supplied_db_password ? 0 : 1
+  count            = local.create_rds && !local.use_supplied_db_password ? 1 : 0
   length           = 20
   special          = true
   override_special = "!@#%^*-_=+"
@@ -21,6 +23,7 @@ resource "random_password" "db_password" {
 
 # RDS Instance
 resource "aws_db_instance" "main" {
+  count          = local.create_rds ? 1 : 0
   identifier     = "${var.project_name}-db"
   engine         = "postgres"
   engine_version = "15"
@@ -34,7 +37,7 @@ resource "aws_db_instance" "main" {
   username = var.db_username
   password = local.use_supplied_db_password ? var.db_password : random_password.db_password[0].result
 
-  db_subnet_group_name            = aws_db_subnet_group.main.name
+  db_subnet_group_name            = aws_db_subnet_group.main[0].name
   vpc_security_group_ids          = [aws_security_group.rds.id]
   publicly_accessible             = false
 
@@ -55,22 +58,22 @@ resource "aws_db_instance" "main" {
 
 # Outputs
 output "rds_endpoint" {
-  value       = aws_db_instance.main.endpoint
+  value       = var.enable_rds ? aws_db_instance.main[0].endpoint : ""
   description = "RDS Endpoint"
 }
 
 output "rds_address" {
-  value       = aws_db_instance.main.address
+  value       = var.enable_rds ? aws_db_instance.main[0].address : ""
   description = "RDS Address"
 }
 
 output "rds_port" {
-  value       = aws_db_instance.main.port
+  value       = var.enable_rds ? aws_db_instance.main[0].port : 0
   description = "RDS Port"
 }
 
 output "rds_database_name" {
-  value       = aws_db_instance.main.db_name
+  value       = var.enable_rds ? aws_db_instance.main[0].db_name : ""
   description = "RDS Database Name"
   sensitive   = true
 }

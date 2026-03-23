@@ -18,6 +18,7 @@ node_min_size          = 1
 node_max_size          = 4
 
 # RDS Database Configuration (Paid-tier instances)
+enable_rds                 = false
 db_instance_class          = "db.t3.small"
 db_allocated_storage       = 20
 db_name                    = "payment_db"

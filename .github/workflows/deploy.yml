@@ -167,7 +167,8 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
       TF_VAR_nat_gateway_count: "1"
-      TF_VAR_db_instance_class: "db.t3.small"
+      TF_VAR_enable_rds: "false"
+      TF_VAR_db_instance_class: "db.t2.micro"
       TF_VAR_node_instance_type: "t3.small"
 
     steps:

@@ -139,12 +139,14 @@ if [[ -n "${tg_arn}" && "${tg_arn}" != "None" ]]; then
   terraform state show aws_lb_target_group.main >/dev/null 2>&1 || terraform import aws_lb_target_group.main "${tg_arn}" || true
 fi
 
-import_if_exists "aws_db_subnet_group.main" \
-  "aws rds describe-db-subnet-groups --region ${REGION} --db-subnet-group-name ${PROJECT}-db-subnet-group" \
-  "${PROJECT}-db-subnet-group"
+if [[ "${TF_VAR_enable_rds:-false}" == "true" ]]; then
+  import_if_exists "aws_db_subnet_group.main[0]" \
+    "aws rds describe-db-subnet-groups --region ${REGION} --db-subnet-group-name ${PROJECT}-db-subnet-group" \
+    "${PROJECT}-db-subnet-group"
 
-import_if_exists "aws_db_instance.main" \
-  "aws rds describe-db-instances --region ${REGION} --db-instance-identifier ${PROJECT}-db" \
-  "${PROJECT}-db"
+  import_if_exists "aws_db_instance.main[0]" \
+    "aws rds describe-db-instances --region ${REGION} --db-instance-identifier ${PROJECT}-db" \
+    "${PROJECT}-db"
+fi
 
 echo "== Import step complete =="

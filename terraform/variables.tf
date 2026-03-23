@@ -68,6 +68,12 @@ variable "node_max_size" {
 }
 
 # RDS Variables
+variable "enable_rds" {
+  description = "Enable RDS resources (subnet group and DB instance)"
+  type        = bool
+  default     = false
+}
+
 variable "db_instance_class" {
   description = "RDS Instance Class (free-tier: db.t2.micro)"
   type        = string
