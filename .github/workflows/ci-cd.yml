@@ -1,4 +1,4 @@
-name: Build and Test CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    name: Build Project
+    name: 1. Build
     runs-on: ubuntu-latest
     
     services:
@@ -48,7 +48,7 @@ jobs:
           echo "All modules compiled successfully" >> $GITHUB_STEP_SUMMARY
 
   test:
-    name: Run Tests
+    name: 2. Test
     runs-on: ubuntu-latest
     needs: build
     
@@ -115,4 +115,197 @@ jobs:
           echo "## 🧪 Test Execution Complete" >> $GITHUB_STEP_SUMMARY
           echo "All tests executed successfully" >> $GITHUB_STEP_SUMMARY
           echo "📊 Test artifacts available for download" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: 3. Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build Maven artifacts
+        shell: bash
+        run: |
+          mvn -B -DskipTests clean package
+
+      - name: Build Docker images from source
+        shell: bash
+        run: |
+          docker compose -f docker-compose.yml build
+
+      - name: Save Docker images to tar
+        shell: bash
+        run: |
+          images=$(docker compose -f docker-compose.yml config --images)
+          echo "Images to export:"
+          echo "$images"
+
+          missing=0
+          for image in $images; do
+            if ! docker image inspect "$image" >/dev/null 2>&1; then
+              echo "Missing built image: $image"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more images are missing after build. Aborting deploy."
+            exit 1
+          fi
+
+          docker save $images -o images.tar
+
+      - name: Setup SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          KEY_CONTENT='${{ secrets.SSH_PRIVATE_KEY }}'
+          HOST='${{ secrets.EC2_PUBLIC_IP }}'
+
+          if [ -z "$KEY_CONTENT" ]; then
+            echo "SSH_PRIVATE_KEY secret is empty"
+            exit 1
+          fi
+          if [ -z "$HOST" ]; then
+            echo "EC2_PUBLIC_IP secret is empty"
+            exit 1
+          fi
+
+          if printf '%s' "$KEY_CONTENT" | grep -q "BEGIN .*PRIVATE KEY"; then
+            printf '%s' "$KEY_CONTENT" | sed 's/\\n/\n/g' | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            printf '%s' "$KEY_CONTENT" | tr -d '\r\n' | base64 --decode > ~/.ssh/deploy_key || {
+              echo "SSH_PRIVATE_KEY is neither raw private key nor valid base64"
+              exit 1
+            }
+          fi
+
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null || {
+            echo "Invalid SSH private key format"
+            exit 1
+          }
+
+          touch ~/.ssh/known_hosts
+          if ! ssh-keyscan -T 10 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "Warning: ssh-keyscan failed for $HOST, continuing with StrictHostKeyChecking=accept-new"
+          fi
+
+      - name: Copy deployment files to EC2
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+
+          retry_ssh() {
+            local cmd="$1"
+            for i in 1 2 3 4 5; do
+              if ssh $SSH_OPTS ubuntu@"$HOST" "$cmd"; then
+                return 0
+              fi
+              echo "SSH attempt $i failed; retrying in 15s..."
+              sleep 15
+            done
+            return 1
+          }
+
+          retry_scp() {
+            for i in 1 2 3 4 5; do
+              if scp $SSH_OPTS "$@"; then
+                return 0
+              fi
+              echo "SCP attempt $i failed; retrying in 15s..."
+              sleep 15
+            done
+            return 1
+          }
+
+          retry_ssh "mkdir -p /home/ubuntu/app"
+          retry_scp images.tar ubuntu@"$HOST":/home/ubuntu/app/images.tar
+          retry_scp docker-compose.yml ubuntu@"$HOST":/home/ubuntu/app/docker-compose.yml
+          retry_scp -r github-config ubuntu@"$HOST":/home/ubuntu/app/
+
+      - name: Deploy to EC2 host
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          for i in 1 2 3 4 5; do
+            if ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
+          set -e
+          echo "Deploying microservices..."
+          cd /home/ubuntu/app
+
+          if command -v docker-compose >/dev/null 2>&1; then
+            compose_cmd() { sudo docker-compose "$@"; }
+          else
+            compose_cmd() { sudo docker compose "$@"; }
+          fi
+
+          echo "Loading local images..."
+          sudo docker load -i /home/ubuntu/app/images.tar
+
+          echo "Stopping existing services..."
+          compose_cmd down || true
+
+          echo "Starting services from local images..."
+          if ! compose_cmd up -d --no-build --pull never; then
+            echo "Retrying without --pull flag for docker-compose compatibility..."
+            compose_cmd up -d --no-build
+          fi
+
+          echo "Checking service status..."
+          compose_cmd ps
+
+          echo "Services deployed successfully!"
+          EOF
+            then
+              break
+            fi
+            if [ "$i" -eq 5 ]; then
+              echo "Deploy SSH command failed after retries"
+              exit 1
+            fi
+            echo "Deploy SSH attempt $i failed; retrying in 20s..."
+            sleep 20
+          done
+
+      - name: Verify Deployment
+        run: |
+          echo "✅ Deployment completed!"
+          echo ""
+          echo "Service URLs:"
+          echo "  Frontend:       http://${{ secrets.EC2_PUBLIC_IP }}:8051"
+          echo "  Eureka:         http://${{ secrets.EC2_PUBLIC_IP }}:8061"
+          echo "  Swagger:        http://${{ secrets.EC2_PUBLIC_IP }}:8062/swagger-ui.html"
+          echo "  Config Server:  http://${{ secrets.EC2_PUBLIC_IP }}:8060"
+          echo "  RabbitMQ:       http://${{ secrets.EC2_PUBLIC_IP }}:15672"
+
+      - name: Collect diagnostics on failure
+        if: failure()
+        shell: bash
+        run: |
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          set +e
+          cd /home/ubuntu/app
+          sudo docker compose ps
+          echo "--- config-server logs ---"
+          sudo docker logs --tail 120 config-server
+          echo "--- eureka-server logs ---"
+          sudo docker logs --tail 120 eureka-server
+          EOF
 
