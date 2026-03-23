@@ -69,3 +69,21 @@ jobs:
           echo "  Config Server:  http://${{ secrets.EC2_PUBLIC_IP }}:8060"
           echo "  RabbitMQ:       http://${{ secrets.EC2_PUBLIC_IP }}:15672"
 
+      - name: Collect diagnostics on failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 120s
+          command_timeout: 10m
+          script: |
+            set +e
+            cd /home/ubuntu/app
+            sudo docker compose ps
+            echo "--- config-server logs ---"
+            sudo docker logs --tail 120 config-server
+            echo "--- eureka-server logs ---"
+            sudo docker logs --tail 120 eureka-server
+

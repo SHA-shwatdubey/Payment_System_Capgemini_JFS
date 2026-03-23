@@ -70,8 +70,11 @@ services:
     container_name: config-server
     environment:
       SERVER_PORT: 8060
-      SPRING_PROFILES_ACTIVE: native
-      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/SHA-shwatdubey/Payment_System_Capgemini_JFS.git
+      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
+      SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS: github-config
+      SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
     ports:
       - "8060:8060"
@@ -81,10 +84,11 @@ services:
       - microservices
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/info"]
+      start_period: 40s
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 12
 
   # API Gateway
   api-gateway:
