@@ -2,7 +2,10 @@
 services:
   # Database
   wallet-postgres:
-    image: postgres:16-alpine
+    build:
+      context: ./docker
+      dockerfile: postgres/Dockerfile
+    image: local/wallet-postgres:latest
     container_name: wallet-postgres
     environment:
       POSTGRES_DB: wallet_db
@@ -23,7 +26,10 @@ services:
 
   # Message Queue
   wallet-rabbitmq:
-    image: rabbitmq:3.13-management-alpine
+    build:
+      context: ./docker
+      dockerfile: rabbitmq/Dockerfile
+    image: local/wallet-rabbitmq:latest
     container_name: wallet-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: guest
