@@ -39,8 +39,20 @@ jobs:
         shell: bash
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "SSH_PRIVATE_KEY secret is empty"
+            exit 1
+          fi
+
+          # Accept either raw OpenSSH/PEM key content or base64-encoded key content.
+          if printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" | grep -q "BEGIN .*PRIVATE KEY"; then
+            printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r\n' | base64 --decode > ~/.ssh/deploy_key
+          fi
+
           chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
           ssh-keyscan -H "${{ secrets.EC2_PUBLIC_IP }}" >> ~/.ssh/known_hosts
 
       - name: Copy deployment files to EC2
