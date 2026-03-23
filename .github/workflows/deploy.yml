@@ -165,10 +165,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      TF_VAR_nat_gateway_count: "0"
+      TF_VAR_db_instance_class: "db.t3.micro"
+      TF_VAR_node_instance_type: "t3.micro"
     
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
+      - name: 🧹 Remove committed local Terraform state files
+        run: |
+          rm -f terraform/terraform.tfstate terraform/terraform.tfstate.backup terraform/.terraform.lock.hcl
       
       - name: 🔧 Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -181,6 +189,19 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔐 Resolve DB password input
+        id: db_password
+        shell: bash
+        env:
+          DB_PASSWORD_SECRET: ${{ secrets.DB_PASSWORD }}
+        run: |
+          if [[ -n "${DB_PASSWORD_SECRET}" && ${#DB_PASSWORD_SECRET} -ge 8 ]]; then
+            echo "tf_var_db_password=${DB_PASSWORD_SECRET}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tf_var_db_password=" >> "$GITHUB_OUTPUT"
+            echo "DB_PASSWORD secret missing/short; Terraform will auto-generate a strong password." >> "$GITHUB_STEP_SUMMARY"
+          fi
       
       - name: 🔧 Terraform Init
         run: terraform init -input=false -reconfigure
@@ -199,13 +220,18 @@ jobs:
         working-directory: terraform
         shell: bash
         env:
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "0"
-          TF_VAR_db_instance_class: "db.t3.micro"
-          TF_VAR_node_instance_type: "t3.micro"
+          TF_VAR_db_password: ${{ steps.db_password.outputs.tf_var_db_password }}
         run: |
           chmod +x ./import_existing_resources.sh
           ./import_existing_resources.sh
+
+      - name: ✅ Verify existing EKS cluster is in Terraform state
+        working-directory: terraform
+        shell: bash
+        run: |
+          if aws eks describe-cluster --name payment-system-capgemini-cluster --region "${AWS_REGION}" >/dev/null 2>&1; then
+            terraform state show aws_eks_cluster.main >/dev/null
+          fi
      
 
       - name: 📊 Terraform Plan
@@ -213,10 +239,7 @@ jobs:
           terraform plan -input=false -lock-timeout=10m -out=tfplan
         working-directory: terraform
         env:
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "0"
-          TF_VAR_db_instance_class: "db.t3.micro"
-          TF_VAR_node_instance_type: "t3.micro"
+          TF_VAR_db_password: ${{ steps.db_password.outputs.tf_var_db_password }}
 
       - name: 📤 Upload Terraform Plan
         uses: actions/upload-artifact@v4
@@ -230,10 +253,7 @@ jobs:
           terraform apply -input=false -lock-timeout=10m -auto-approve tfplan
         working-directory: terraform
         env:
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-          TF_VAR_nat_gateway_count: "0"
-          TF_VAR_db_instance_class: "db.t3.micro"
-          TF_VAR_node_instance_type: "t3.micro"
+          TF_VAR_db_password: ${{ steps.db_password.outputs.tf_var_db_password }}
 
       - name: 📍 Get Terraform Outputs
         id: terraform

@@ -89,7 +89,13 @@ variable "db_username" {
 variable "db_password" {
   description = "Database Password"
   type        = string
+  default     = ""
   sensitive   = true
+
+  validation {
+    condition     = var.db_password == "" || length(trimspace(var.db_password)) >= 8
+    error_message = "db_password must be at least 8 characters, or left empty to auto-generate a strong password."
+  }
 }
 
 variable "db_multi_az" {

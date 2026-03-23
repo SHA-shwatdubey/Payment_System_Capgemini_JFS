@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   # Uncomment below to use S3 backend for state management
@@ -28,6 +32,11 @@ provider "aws" {
       ManagedBy   = "Terraform"
     }
   }
+}
+
+locals {
+  # Keep dev deployments free-tier friendly and avoid NAT/EIP association conflicts.
+  effective_nat_gateway_count = var.environment == "dev" ? 0 : var.nat_gateway_count
 }
 
 # VPC
@@ -77,7 +86,7 @@ resource "aws_subnet" "private" {
 
 # Elastic IPs for NAT Gateways
 resource "aws_eip" "nat" {
-  count  = var.nat_gateway_count
+  count  = local.effective_nat_gateway_count
   domain = "vpc"
 
   depends_on = [aws_internet_gateway.main]
@@ -89,7 +98,7 @@ resource "aws_eip" "nat" {
 
 # NAT Gateways
 resource "aws_nat_gateway" "main" {
-  count         = var.nat_gateway_count
+  count         = local.effective_nat_gateway_count
   allocation_id = aws_eip.nat[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
 
@@ -126,7 +135,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   dynamic "route" {
-    for_each = var.nat_gateway_count > 0 ? [1] : []
+    for_each = local.effective_nat_gateway_count > 0 ? [1] : []
     content {
       cidr_block     = "0.0.0.0/0"
       nat_gateway_id = aws_nat_gateway.main[0].id

@@ -8,6 +8,17 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
+locals {
+  use_supplied_db_password = var.db_password != "" && length(trimspace(var.db_password)) >= 8
+}
+
+resource "random_password" "db_password" {
+  count            = local.use_supplied_db_password ? 0 : 1
+  length           = 20
+  special          = true
+  override_special = "!@#%^*-_=+"
+}
+
 # RDS Instance
 resource "aws_db_instance" "main" {
   identifier     = "${var.project_name}-db"
@@ -21,7 +32,7 @@ resource "aws_db_instance" "main" {
 
   db_name  = var.db_name
   username = var.db_username
-  password = var.db_password
+  password = local.use_supplied_db_password ? var.db_password : random_password.db_password[0].result
 
   db_subnet_group_name            = aws_db_subnet_group.main.name
   vpc_security_group_ids          = [aws_security_group.rds.id]

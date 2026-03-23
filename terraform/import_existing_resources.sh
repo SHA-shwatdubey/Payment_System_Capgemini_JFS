@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
 PROJECT="${PROJECT:-payment-system-capgemini}"
 REGION="${AWS_REGION:-ap-south-1}"
@@ -11,7 +11,7 @@ import_if_exists() {
   local resource_id="$3"
 
   if eval "$cloud_exists_cmd" >/dev/null 2>&1; then
-    terraform state show "$tf_addr" >/dev/null 2>&1 || terraform import "$tf_addr" "$resource_id" || true
+    terraform state show "$tf_addr" >/dev/null 2>&1 || terraform import "$tf_addr" "$resource_id"
   fi
 }
 
@@ -44,14 +44,14 @@ if [[ -n "${vpc_id}" && "${vpc_id}" != "None" ]]; then
   # Import NAT first, then import the exact EIP allocation attached to that NAT.
   nat_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --filter "Name=vpc-id,Values=${vpc_id}" "Name=state,Values=available,pending" --query 'NatGateways[0].NatGatewayId' --output text 2>/dev/null || true)"
   if [[ -n "${nat_id}" && "${nat_id}" != "None" ]]; then
-    terraform state show 'aws_nat_gateway.main[0]' >/dev/null 2>&1 || terraform import 'aws_nat_gateway.main[0]' "${nat_id}" || true
+    terraform state show 'aws_nat_gateway.main[0]' >/dev/null 2>&1 || terraform import 'aws_nat_gateway.main[0]' "${nat_id}"
 
     eip_alloc_id="$(aws ec2 describe-nat-gateways --region "${REGION}" --nat-gateway-ids "${nat_id}" --query 'NatGateways[0].NatGatewayAddresses[0].AllocationId' --output text 2>/dev/null || true)"
-    [[ -n "${eip_alloc_id}" && "${eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${eip_alloc_id}" || true)
+    [[ -n "${eip_alloc_id}" && "${eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${eip_alloc_id}")
   else
     # If NAT does not exist yet in this VPC, import the intended project EIP if present.
     tagged_eip_alloc_id="$(aws ec2 describe-addresses --region "${REGION}" --filters "Name=tag:Name,Values=${PROJECT}-eip-1" --query 'Addresses[0].AllocationId' --output text 2>/dev/null || true)"
-    [[ -n "${tagged_eip_alloc_id}" && "${tagged_eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${tagged_eip_alloc_id}" || true)
+    [[ -n "${tagged_eip_alloc_id}" && "${tagged_eip_alloc_id}" != "None" ]] && (terraform state show 'aws_eip.nat[0]' >/dev/null 2>&1 || terraform import 'aws_eip.nat[0]' "${tagged_eip_alloc_id}")
   fi
 
   public_rt_id="$(aws ec2 describe-route-tables --region "${REGION}" --filters "Name=vpc-id,Values=${vpc_id}" "Name=tag:Name,Values=${PROJECT}-public-rt" --query 'RouteTables[0].RouteTableId' --output text 2>/dev/null || true)"
@@ -99,7 +99,7 @@ import_if_exists "aws_eks_cluster.main" \
 
 # Ensure cluster import happened if cluster exists in AWS.
 if aws eks describe-cluster --name "${PROJECT}-cluster" --region "${REGION}" >/dev/null 2>&1; then
-  terraform state show aws_eks_cluster.main >/dev/null 2>&1 || terraform import aws_eks_cluster.main "${PROJECT}-cluster" || true
+  terraform state show aws_eks_cluster.main >/dev/null 2>&1 || terraform import aws_eks_cluster.main "${PROJECT}-cluster"
 fi
 
 services=(
