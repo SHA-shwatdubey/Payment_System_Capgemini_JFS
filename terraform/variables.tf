@@ -19,13 +19,13 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.small"
 }
 
 variable "root_volume_size" {
   description = "Root volume size in GB"
   type        = number
-  default     = 50
+  default     = 100
 }
 
 variable "ssh_cidr_blocks" {
