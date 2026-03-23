@@ -1,18 +1,24 @@
+# Terraform configuration for payment-system-capgemini
+# PAID-TIER DEPLOYMENT - All free-tier constraints removed
+# All old AWS resources cleaned up - fresh deployment
+
 aws_region          = "ap-south-1"
 project_name        = "payment-system-capgemini"
 environment         = "dev"
-nat_gateway_count   = 0
 
-# EKS Configuration
+# Network Configuration (with NAT Gateway for production-grade setup)
+nat_gateway_count   = 1
+
+# EKS Cluster Configuration (Paid-tier instances)
 eks_kubernetes_version = "1.30"
 eks_node_ami_type      = "AL2023_x86_64_STANDARD"
-node_instance_type     = "t3.micro"
+node_instance_type     = "t3.small"
 node_desired_size      = 2
 node_min_size          = 1
 node_max_size          = 4
 
-# RDS Configuration
-db_instance_class          = "db.t3.micro"
+# RDS Database Configuration (Paid-tier instances)
+db_instance_class          = "db.t3.small"
 db_allocated_storage       = 20
 db_name                    = "payment_db"
 db_username                = "postgres"

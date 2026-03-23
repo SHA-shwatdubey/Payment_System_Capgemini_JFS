@@ -1,3 +1,11 @@
+# ===============================================
+# Terraform Variables: Payment System Capgemini
+# ===============================================
+# CONFIGURATION: PAID-TIER ONLY
+# Free-tier constraints have been removed.
+# All defaults are production-grade (paid instances).
+# ===============================================
+
 variable "aws_region" {
   description = "AWS Region"
   type        = string
@@ -105,7 +113,7 @@ variable "db_multi_az" {
 }
 
 variable "db_backup_retention_period" {
-  description = "RDS backup retention in days (set low for free-tier constrained accounts)"
+  description = "RDS backup retention in days"
   type        = number
   default     = 1
 }
