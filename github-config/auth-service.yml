@@ -36,9 +36,9 @@ eureka:
 
 # Twilio Configuration for SMS OTP
 twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN}
-  from-number: ${TWILIO_FROM_NUMBER}
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  from-number: ${TWILIO_FROM_NUMBER:}
 
 
 

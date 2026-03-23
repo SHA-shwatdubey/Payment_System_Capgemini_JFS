@@ -32,9 +32,9 @@ eureka:
       defaultZone: http://eureka-server:8061/eureka/
 
 twilio:
-  account-sid: ${TWILIO_ACCOUNT_SID}
-  auth-token: ${TWILIO_AUTH_TOKEN}
-  from-number: ${TWILIO_FROM_NUMBER}
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  from-number: ${TWILIO_FROM_NUMBER:}
 
 server:
   port: 8063

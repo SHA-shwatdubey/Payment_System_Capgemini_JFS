@@ -26,8 +26,9 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: wallet-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit loopback_users []"
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -42,9 +43,46 @@ services:
       timeout: 5s
       retries: 5
 
-  # Service Registry
+  # Config Server (BUILT LOCALLY)
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    image: local/config-server:latest
+    container_name: config-server
+    environment:
+      SERVER_PORT: 8060
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/SHA-shwatdubey/Payment_System_Capgemini_JFS.git
+      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
+      SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS: github-config
+      SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
+    ports:
+      - "8060:8060"
+    volumes:
+      - ./github-config:/config-repo:ro
+    networks:
+      - microservices
+    restart: always
+    depends_on:
+      wallet-postgres:
+        condition: service_healthy
+      wallet-rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/info"]
+      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Service Registry (BUILT LOCALLY)
   eureka-server:
-    image: shashwattech/backend_payment_system_capgemini-eureka-server:latest
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    image: local/eureka-server:latest
     container_name: eureka-server
     environment:
       SERVER_PORT: 8061
@@ -64,35 +102,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Config Server
-  config-server:
-    image: shashwattech/backend_payment_system_capgemini-config-server:latest
-    container_name: config-server
-    environment:
-      SERVER_PORT: 8060
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/SHA-shwatdubey/Payment_System_Capgemini_JFS.git
-      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
-      SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS: github-config
-      SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
-      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
-    ports:
-      - "8060:8060"
-    volumes:
-      - ./github-config:/config-repo:ro
-    networks:
-      - microservices
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/info"]
-      start_period: 40s
-      interval: 10s
-      timeout: 5s
-      retries: 12
-
-  # API Gateway
+  # API Gateway (BUILT LOCALLY)
   api-gateway:
-    image: shashwattech/backend_payment_system_capgemini-api-gateway:latest
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: local/api-gateway:latest
     container_name: api-gateway
     environment:
       SERVER_PORT: 8062
@@ -106,26 +121,39 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8062/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Auth Service
+  # Auth Service (BUILT LOCALLY)
   auth-service:
-    image: shashwattech/backend_payment_system_capgemini-auth-service:latest
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    image: local/auth-service:latest
     container_name: auth-service
     environment:
       SERVER_PORT: 8063
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
-      SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8060
+      SPRING_CLOUD_CONFIG_ENABLED: "true"
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_FROM: "${MAIL_FROM:-no-reply@example.com}"
+      TWILIO_ACCOUNT_SID: "${TWILIO_ACCOUNT_SID:-}"
+      TWILIO_AUTH_TOKEN: "${TWILIO_AUTH_TOKEN:-}"
+      TWILIO_FROM_NUMBER: "${TWILIO_FROM_NUMBER:-}"
     ports:
       - "8063:8063"
     networks:
@@ -138,10 +166,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # User KYC Service
+  # User KYC Service (BUILT LOCALLY)
   user-kyc-service:
-    image: shashwattech/backend_payment_system_capgemini-user-kyc-service:latest
+    build:
+      context: ./user-kyc-service
+      dockerfile: Dockerfile
+    image: local/user-kyc-service:latest
     container_name: user-kyc-service
     environment:
       SERVER_PORT: 8064
@@ -151,8 +184,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8064:8064"
     networks:
@@ -165,10 +198,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Wallet Service
+  # Wallet Service (BUILT LOCALLY)
   wallet-service:
-    image: shashwattech/backend_payment_system_capgemini-wallet-service:latest
+    build:
+      context: ./wallet-service
+      dockerfile: Dockerfile
+    image: local/wallet-service:latest
     container_name: wallet-service
     environment:
       SERVER_PORT: 8065
@@ -178,8 +216,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8065:8065"
     networks:
@@ -192,10 +230,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Rewards Service
+  # Rewards Service (BUILT LOCALLY)
   rewards-service:
-    image: shashwattech/backend_payment_system_capgemini-rewards-service:latest
+    build:
+      context: ./rewards-service
+      dockerfile: Dockerfile
+    image: local/rewards-service:latest
     container_name: rewards-service
     environment:
       SERVER_PORT: 8066
@@ -205,8 +248,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8066:8066"
     networks:
@@ -219,10 +262,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Admin Service
+  # Admin Service (BUILT LOCALLY)
   admin-service:
-    image: shashwattech/backend_payment_system_capgemini-admin-service:latest
+    build:
+      context: ./admin-service
+      dockerfile: Dockerfile
+    image: local/admin-service:latest
     container_name: admin-service
     environment:
       SERVER_PORT: 8067
@@ -232,8 +280,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8067:8067"
     networks:
@@ -246,10 +294,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Transaction Service
+  # Transaction Service (BUILT LOCALLY)
   transaction-service:
-    image: shashwattech/backend_payment_system_capgemini-transaction-service:latest
+    build:
+      context: ./transaction-service
+      dockerfile: Dockerfile
+    image: local/transaction-service:latest
     container_name: transaction-service
     environment:
       SERVER_PORT: 8068
@@ -259,8 +312,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8068:8068"
     networks:
@@ -273,10 +326,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Notification Service
+  # Notification Service (BUILT LOCALLY)
   notification-service:
-    image: shashwattech/backend_payment_system_capgemini-notification-service:latest
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    image: local/notification-service:latest
     container_name: notification-service
     environment:
       SERVER_PORT: 8069
@@ -286,8 +344,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8069:8069"
     networks:
@@ -300,10 +358,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Integration Service
+  # Integration Service (BUILT LOCALLY)
   integration-service:
-    image: shashwattech/backend_payment_system_capgemini-integration-service:latest
+    build:
+      context: ./integration-service
+      dockerfile: Dockerfile
+    image: local/integration-service:latest
     container_name: integration-service
     environment:
       SERVER_PORT: 8070
@@ -313,8 +376,8 @@ services:
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
-      SPRING_RABBITMQ_USERNAME: admin
-      SPRING_RABBITMQ_PASSWORD: admin123
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     ports:
       - "8070:8070"
     networks:
@@ -327,10 +390,15 @@ services:
         condition: service_healthy
       wallet-rabbitmq:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
 
-  # Frontend
+  # Frontend (BUILT LOCALLY)
   frontend:
-    image: shashwattech/backend_payment_system_capgemini-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: local/frontend:latest
     container_name: frontend
     ports:
       - "8051:80"
