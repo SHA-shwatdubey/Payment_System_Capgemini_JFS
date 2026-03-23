@@ -13,6 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build Maven artifacts
+        shell: bash
+        run: |
+          mvn -B -DskipTests clean package
+
       - name: Build Docker images from source
         shell: bash
         run: |
