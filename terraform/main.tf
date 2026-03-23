@@ -35,8 +35,8 @@ provider "aws" {
 }
 
 locals {
-  # Keep dev deployments free-tier friendly and avoid NAT/EIP association conflicts.
-  effective_nat_gateway_count = var.environment == "dev" ? 0 : var.nat_gateway_count
+  # Use NAT gateway count as specified (paid tier enabled)
+  effective_nat_gateway_count = var.nat_gateway_count
 }
 
 # VPC

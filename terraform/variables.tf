@@ -17,9 +17,9 @@ variable "environment" {
 }
 
 variable "nat_gateway_count" {
-  description = "Number of NAT gateways/EIPs to create (set 0 for free-tier constrained accounts)"
+  description = "Number of NAT gateways/EIPs to create"
   type        = number
-  default     = 0
+  default     = 1
 }
 
 # EKS Variables
@@ -61,9 +61,9 @@ variable "node_max_size" {
 
 # RDS Variables
 variable "db_instance_class" {
-  description = "RDS Instance Class"
+  description = "RDS Instance Class (free-tier: db.t2.micro or db.t3.micro)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t2.micro"
 }
 
 variable "db_allocated_storage" {

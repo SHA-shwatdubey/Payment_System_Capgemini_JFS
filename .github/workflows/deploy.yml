@@ -166,10 +166,10 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
-      TF_VAR_nat_gateway_count: "0"
-      TF_VAR_db_instance_class: "db.t3.micro"
-      TF_VAR_node_instance_type: "t3.micro"
-    
+      TF_VAR_nat_gateway_count: "1"
+      TF_VAR_db_instance_class: "db.t3.small"
+      TF_VAR_node_instance_type: "t3.small"
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
