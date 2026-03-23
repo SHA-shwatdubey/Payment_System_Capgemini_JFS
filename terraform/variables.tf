@@ -69,9 +69,9 @@ variable "node_max_size" {
 
 # RDS Variables
 variable "db_instance_class" {
-  description = "RDS Instance Class (free-tier: db.t2.micro or db.t3.micro)"
+  description = "RDS Instance Class (free-tier: db.t3.micro)"
   type        = string
-  default     = "db.t2.micro"
+  default     = "db.t3.micro"
 }
 
 variable "db_allocated_storage" {
