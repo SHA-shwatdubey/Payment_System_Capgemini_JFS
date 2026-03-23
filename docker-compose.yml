@@ -49,13 +49,15 @@ services:
     environment:
       SERVER_PORT: 8061
       EUREKA_INSTANCE_HOSTNAME: eureka-server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8060
     ports:
       - "8061:8061"
     networks:
       - microservices
     restart: always
     depends_on:
-      - wallet-postgres
+      config-server:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8061/eureka/status"]
       interval: 10s
@@ -68,15 +70,16 @@ services:
     container_name: config-server
     environment:
       SERVER_PORT: 8060
+      SPRING_PROFILES_ACTIVE: native
+      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
     ports:
       - "8060:8060"
+    volumes:
+      - ./github-config:/config-repo:ro
     networks:
       - microservices
     restart: always
-    depends_on:
-      eureka-server:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/health"]
       interval: 10s
