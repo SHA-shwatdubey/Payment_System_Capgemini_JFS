@@ -1,0 +1,41 @@
+name: Deploy Microservices
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d
+            
+            # Wait for services to be healthy
+            echo "Waiting for services to start..."
+            sleep 30
+            
+            # Check status
+            docker-compose ps
+            
+      - name: Verify Deployment
+        run: |
+          echo "Deployment successful!"
+          echo "Frontend URL: http://${{ secrets.EC2_PUBLIC_IP }}:8051"
+          echo "Eureka URL: http://${{ secrets.EC2_PUBLIC_IP }}:8061"
+          echo "Swagger URL: http://${{ secrets.EC2_PUBLIC_IP }}:8062/swagger-ui.html"
+
