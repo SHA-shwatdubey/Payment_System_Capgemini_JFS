@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/wallet_auth_db
-    username: postgres
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/wallet_auth_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
   jpa:
     hibernate:
       ddl-auto: update
@@ -32,7 +32,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8061/eureka/
+      defaultZone: http://eureka-server:8061/eureka/
 
 # Twilio Configuration for SMS OTP
 twilio:

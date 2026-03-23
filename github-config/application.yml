@@ -1,7 +1,7 @@
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8061/eureka/
+      defaultZone: http://eureka-server:8061/eureka/
 
 springdoc:
   api-docs:
@@ -14,3 +14,4 @@ security:
   jwt:
     secret: ${JWT_SECRET:Q2FwZ2VtaW5pV2FsbGV0SldUU2VjcmV0S2V5Rm9yR2F0ZXdheUFuZFNlcnZpY2VzMTIzNDU2}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
