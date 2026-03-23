@@ -19,23 +19,38 @@ jobs:
           host: ${{ secrets.EC2_PUBLIC_IP }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 120s
+          command_timeout: 10m
           script: |
+            set -e
+            echo "Deploying microservices..."
             cd /home/ubuntu/app
-            docker-compose down
+            
+            echo "Stopping existing services..."
+            docker-compose down || true
+            
+            echo "Pulling latest images..."
             docker-compose pull
+            
+            echo "Starting services..."
             docker-compose up -d
             
-            # Wait for services to be healthy
             echo "Waiting for services to start..."
             sleep 30
             
-            # Check status
+            echo "Checking service status..."
             docker-compose ps
+            
+            echo "Services deployed successfully!"
             
       - name: Verify Deployment
         run: |
-          echo "Deployment successful!"
-          echo "Frontend URL: http://${{ secrets.EC2_PUBLIC_IP }}:8051"
-          echo "Eureka URL: http://${{ secrets.EC2_PUBLIC_IP }}:8061"
-          echo "Swagger URL: http://${{ secrets.EC2_PUBLIC_IP }}:8062/swagger-ui.html"
+          echo "✅ Deployment completed!"
+          echo ""
+          echo "Service URLs:"
+          echo "  Frontend:       http://${{ secrets.EC2_PUBLIC_IP }}:8051"
+          echo "  Eureka:         http://${{ secrets.EC2_PUBLIC_IP }}:8061"
+          echo "  Swagger:        http://${{ secrets.EC2_PUBLIC_IP }}:8062/swagger-ui.html"
+          echo "  Config Server:  http://${{ secrets.EC2_PUBLIC_IP }}:8060"
+          echo "  RabbitMQ:       http://${{ secrets.EC2_PUBLIC_IP }}:15672"
 
