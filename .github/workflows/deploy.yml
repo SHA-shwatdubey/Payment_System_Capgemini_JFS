@@ -69,29 +69,24 @@ jobs:
           }
 
           touch ~/.ssh/known_hosts
-          for i in 1 2 3; do
-            if ssh-keyscan -T 10 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-              break
-            fi
-            if [ "$i" -eq 3 ]; then
-              echo "Failed to fetch host key from $HOST"
-              exit 1
-            fi
-            sleep 3
-          done
+          if ! ssh-keyscan -T 10 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+            echo "Warning: ssh-keyscan failed for $HOST, continuing with StrictHostKeyChecking=accept-new"
+          fi
 
       - name: Copy deployment files to EC2
         shell: bash
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} "mkdir -p /home/ubuntu/app"
-          scp -i ~/.ssh/deploy_key images.tar ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/images.tar
-          scp -i ~/.ssh/deploy_key docker-compose.yml ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/docker-compose.yml
-          scp -i ~/.ssh/deploy_key -r github-config ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} "mkdir -p /home/ubuntu/app"
+          scp $SSH_OPTS images.tar ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/images.tar
+          scp $SSH_OPTS docker-compose.yml ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/docker-compose.yml
+          scp $SSH_OPTS -r github-config ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/
 
       - name: Deploy to EC2
         shell: bash
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
           set -e
           echo "Deploying microservices..."
           cd /home/ubuntu/app
@@ -132,7 +127,8 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
           set +e
           cd /home/ubuntu/app
           sudo docker compose ps
