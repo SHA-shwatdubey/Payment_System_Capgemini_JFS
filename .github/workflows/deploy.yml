@@ -38,22 +38,47 @@ jobs:
       - name: Setup SSH key
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          KEY_CONTENT='${{ secrets.SSH_PRIVATE_KEY }}'
+          HOST='${{ secrets.EC2_PUBLIC_IP }}'
+
+          if [ -z "$KEY_CONTENT" ]; then
             echo "SSH_PRIVATE_KEY secret is empty"
             exit 1
           fi
+          if [ -z "$HOST" ]; then
+            echo "EC2_PUBLIC_IP secret is empty"
+            exit 1
+          fi
 
-          # Accept either raw OpenSSH/PEM key content or base64-encoded key content.
-          if printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" | grep -q "BEGIN .*PRIVATE KEY"; then
-            printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
+          # Accept raw multiline key, escaped \n key, or base64-encoded key.
+          if printf '%s' "$KEY_CONTENT" | grep -q "BEGIN .*PRIVATE KEY"; then
+            printf '%s' "$KEY_CONTENT" | sed 's/\\n/\n/g' | tr -d '\r' > ~/.ssh/deploy_key
           else
-            printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r\n' | base64 --decode > ~/.ssh/deploy_key
+            printf '%s' "$KEY_CONTENT" | tr -d '\r\n' | base64 --decode > ~/.ssh/deploy_key || {
+              echo "SSH_PRIVATE_KEY is neither raw private key nor valid base64"
+              exit 1
+            }
           fi
 
           chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
-          ssh-keyscan -H "${{ secrets.EC2_PUBLIC_IP }}" >> ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null || {
+            echo "Invalid SSH private key format"
+            exit 1
+          }
+
+          touch ~/.ssh/known_hosts
+          for i in 1 2 3; do
+            if ssh-keyscan -T 10 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            if [ "$i" -eq 3 ]; then
+              echo "Failed to fetch host key from $HOST"
+              exit 1
+            fi
+            sleep 3
+          done
 
       - name: Copy deployment files to EC2
         shell: bash
