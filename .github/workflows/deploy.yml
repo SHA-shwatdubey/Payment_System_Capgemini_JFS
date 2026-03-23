@@ -13,56 +13,56 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: docker-compose.yml,github-config
-          target: /home/ubuntu/app
-          overwrite: true
-          debug: true
+      - name: Setup SSH key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.EC2_PUBLIC_IP }}" >> ~/.ssh/known_hosts
+
+      - name: Copy deployment files to EC2
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} "mkdir -p /home/ubuntu/app"
+          scp -i ~/.ssh/deploy_key docker-compose.yml ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/docker-compose.yml
+          scp -i ~/.ssh/deploy_key -r github-config ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 120s
-          command_timeout: 10m
-          script: |
-            set -e
-            echo "Deploying microservices..."
-            cd /home/ubuntu/app
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          set -e
+          echo "Deploying microservices..."
+          cd /home/ubuntu/app
 
-            if command -v docker-compose >/dev/null 2>&1; then
-              compose_cmd() { sudo docker-compose "$@"; }
-            else
-              compose_cmd() { sudo docker compose "$@"; }
-            fi
-            
-            echo "Stopping existing services..."
-            compose_cmd down || true
-            
-            echo "Pulling latest images..."
-            compose_cmd pull
-            
-            echo "Starting infra/core services first..."
-            compose_cmd up -d wallet-postgres wallet-rabbitmq config-server eureka-server
-            sleep 40
+          if command -v docker-compose >/dev/null 2>&1; then
+            compose_cmd() { sudo docker-compose "$@"; }
+          else
+            compose_cmd() { sudo docker compose "$@"; }
+          fi
 
-            echo "Starting application services..."
-            compose_cmd up -d api-gateway auth-service user-kyc-service wallet-service rewards-service admin-service transaction-service notification-service integration-service frontend
-            
-            echo "Waiting for services to start..."
-            sleep 30
-            
-            echo "Checking service status..."
-            compose_cmd ps
-            
-            echo "Services deployed successfully!"
+          echo "Stopping existing services..."
+          compose_cmd down || true
+
+          echo "Pulling latest images..."
+          compose_cmd pull
+
+          echo "Starting infra/core services first..."
+          compose_cmd up -d wallet-postgres wallet-rabbitmq config-server eureka-server
+          sleep 40
+
+          echo "Starting application services..."
+          compose_cmd up -d api-gateway auth-service user-kyc-service wallet-service rewards-service admin-service transaction-service notification-service integration-service frontend
+
+          echo "Waiting for services to start..."
+          sleep 30
+
+          echo "Checking service status..."
+          compose_cmd ps
+
+          echo "Services deployed successfully!"
+          EOF
             
       - name: Verify Deployment
         run: |
@@ -77,19 +77,15 @@ jobs:
 
       - name: Collect diagnostics on failure
         if: failure()
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 120s
-          command_timeout: 10m
-          script: |
-            set +e
-            cd /home/ubuntu/app
-            sudo docker compose ps
-            echo "--- config-server logs ---"
-            sudo docker logs --tail 120 config-server
-            echo "--- eureka-server logs ---"
-            sudo docker logs --tail 120 eureka-server
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          set +e
+          cd /home/ubuntu/app
+          sudo docker compose ps
+          echo "--- config-server logs ---"
+          sudo docker logs --tail 120 config-server
+          echo "--- eureka-server logs ---"
+          sudo docker logs --tail 120 eureka-server
+          EOF
 
