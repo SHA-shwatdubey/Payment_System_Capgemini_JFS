@@ -140,6 +140,7 @@ jobs:
 
           echo "Services deployed successfully!"
           EOF
+            then
               break
             fi
             if [ "$i" -eq 5 ]; then
