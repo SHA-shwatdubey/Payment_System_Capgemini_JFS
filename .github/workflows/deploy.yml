@@ -76,17 +76,46 @@ jobs:
       - name: Copy deployment files to EC2
         shell: bash
         run: |
-          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
-          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} "mkdir -p /home/ubuntu/app"
-          scp $SSH_OPTS images.tar ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/images.tar
-          scp $SSH_OPTS docker-compose.yml ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/docker-compose.yml
-          scp $SSH_OPTS -r github-config ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/home/ubuntu/app/
+          set -euo pipefail
+          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+
+          retry_ssh() {
+            local cmd="$1"
+            for i in 1 2 3 4 5; do
+              if ssh $SSH_OPTS ubuntu@"$HOST" "$cmd"; then
+                return 0
+              fi
+              echo "SSH attempt $i failed; retrying in 15s..."
+              sleep 15
+            done
+            return 1
+          }
+
+          retry_scp() {
+            for i in 1 2 3 4 5; do
+              if scp $SSH_OPTS "$@"; then
+                return 0
+              fi
+              echo "SCP attempt $i failed; retrying in 15s..."
+              sleep 15
+            done
+            return 1
+          }
+
+          retry_ssh "mkdir -p /home/ubuntu/app"
+          retry_scp images.tar ubuntu@"$HOST":/home/ubuntu/app/images.tar
+          retry_scp docker-compose.yml ubuntu@"$HOST":/home/ubuntu/app/docker-compose.yml
+          retry_scp -r github-config ubuntu@"$HOST":/home/ubuntu/app/
 
       - name: Deploy to EC2
         shell: bash
         run: |
-          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
-          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          set -euo pipefail
+          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          for i in 1 2 3 4 5; do
+            if ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
           set -e
           echo "Deploying microservices..."
           cd /home/ubuntu/app
@@ -111,7 +140,16 @@ jobs:
 
           echo "Services deployed successfully!"
           EOF
-            
+              break
+            fi
+            if [ "$i" -eq 5 ]; then
+              echo "Deploy SSH command failed after retries"
+              exit 1
+            fi
+            echo "Deploy SSH attempt $i failed; retrying in 20s..."
+            sleep 20
+          done
+
       - name: Verify Deployment
         run: |
           echo "✅ Deployment completed!"
@@ -127,7 +165,7 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=20 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
+          SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
           ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
           set +e
           cd /home/ubuntu/app
