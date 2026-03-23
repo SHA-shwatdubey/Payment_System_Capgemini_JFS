@@ -1,9 +1,8 @@
 # ===============================================
 # Terraform Variables: Payment System Capgemini
 # ===============================================
-# CONFIGURATION: PAID-TIER ONLY
-# Free-tier constraints have been removed.
-# All defaults are production-grade (paid instances).
+# Note: RDS is disabled by default. Enable `enable_rds=true`
+# only when your AWS account plan supports the chosen DB class.
 # ===============================================
 
 variable "aws_region" {
@@ -46,7 +45,7 @@ variable "eks_node_ami_type" {
 variable "node_instance_type" {
   description = "EC2 Instance Type for EKS Nodes"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.small"
 }
 
 variable "node_desired_size" {
@@ -75,9 +74,9 @@ variable "enable_rds" {
 }
 
 variable "db_instance_class" {
-  description = "RDS Instance Class (free-tier: db.t2.micro)"
+  description = "RDS Instance Class"
   type        = string
-  default     = "db.t2.micro"
+  default     = "db.t3.small"
 }
 
 variable "db_allocated_storage" {
