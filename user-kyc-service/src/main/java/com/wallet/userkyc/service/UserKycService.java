@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class UserKycService {
         return repository.save(user);
     }
 
-    public UserProfile submitKycFile(Long userId, MultipartFile document) {
+    public UserProfile submitKycFile(Long userId, MultipartFile document, String fullName, String email, String phone) {
         validateKycDocument(document);
 
         UserProfile user = getOrCreateUser(userId);
@@ -81,6 +82,11 @@ public class UserKycService {
         user.setKycDocumentName(document.getOriginalFilename());
         user.setKycDocumentContentType(document.getContentType());
         user.setKycDocumentSize(document.getSize());
+        
+        if (fullName != null && !fullName.isBlank()) user.setFullName(fullName);
+        if (email != null && !email.isBlank()) user.setEmail(email);
+        if (phone != null && !phone.isBlank()) user.setPhone(phone);
+        
         try {
             user.setKycDocumentData(document.getBytes());
         } catch (IOException e) {
@@ -118,10 +124,18 @@ public class UserKycService {
 
 //    Admin KYC approve/reject kare
     public UserProfile updateKycStatus(Long userId, KycStatusRequest request) {
+        String normalizedStatus = request.status().trim().toUpperCase(Locale.ROOT);
+
         UserProfile user = repository.findByAuthUserId(userId)
-                .or(() -> repository.findById(userId))
+                .or(() -> repository.findById(userId)
+                        .filter(profile -> profile.getAuthUserId() == null || userId.equals(profile.getAuthUserId())))
                 .orElseThrow();
-        user.setKycStatus(request.status());
+
+        if (user.getAuthUserId() == null) {
+            user.setAuthUserId(userId);
+        }
+
+        user.setKycStatus(normalizedStatus);
         UserProfile saved = repository.save(user);
 
         Long notificationUserId = saved.getAuthUserId() == null ? saved.getId() : saved.getAuthUserId();

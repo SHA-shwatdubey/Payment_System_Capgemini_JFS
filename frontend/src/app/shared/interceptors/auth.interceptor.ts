@@ -9,7 +9,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   const token = session.token;
-  const shouldSkip = req.url.includes('/api/auth/login') || req.url.includes('/api/auth/signup');
+  const shouldSkip = req.url.includes('/api/auth/');
 
   const authReq = token && !shouldSkip
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
@@ -17,7 +17,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error) => {
-      if (error.status === 401) {
+      if (error.status === 401 && !shouldSkip) {
         session.logout();
         router.navigate(['/login']);
       }

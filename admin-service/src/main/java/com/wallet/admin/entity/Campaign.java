@@ -19,7 +19,8 @@ public class Campaign {
     private Integer bonusPoints;
     private LocalDate startDate;
     private LocalDate endDate;
-
+    private Boolean active = true;
+    private String status = "ACTIVE";
 
     public Long getId() {
         return id;
@@ -68,5 +69,20 @@ public class Campaign {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
-}
 
+    public Boolean isActive() {
+        return active != null ? active : false;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}

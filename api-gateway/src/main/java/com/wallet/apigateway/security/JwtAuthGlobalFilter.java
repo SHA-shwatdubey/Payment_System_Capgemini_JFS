@@ -95,8 +95,6 @@ public class JwtAuthGlobalFilter implements GlobalFilter, Ordered {
 
     private boolean isAuthorized(String path, String role) {
         boolean adminOnly = path.startsWith("/api/admin/")
-                || path.equals("/api/campaigns")
-                || path.startsWith("/api/campaigns/")
                 || path.equals("/api/kyc/pending")
                 || path.matches("^/api/kyc/[^/]+/status$")
                 || path.startsWith("/api/wallet/admin/")

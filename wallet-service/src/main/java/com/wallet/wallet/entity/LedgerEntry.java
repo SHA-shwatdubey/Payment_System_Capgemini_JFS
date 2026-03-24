@@ -4,18 +4,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ledger_entries")
+@Table(name = "wallet_ledger_entries")
 public class LedgerEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long userId;
+    @Column(name = "entry_type", nullable = false)
     private String type;
     private BigDecimal amount;
     private String reference;
@@ -69,4 +71,6 @@ public class LedgerEntry {
         this.createdAt = createdAt;
     }
 }
+
+
 

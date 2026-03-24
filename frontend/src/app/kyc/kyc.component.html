@@ -51,9 +51,33 @@
 
       <!-- Upload Section -->
       <div class="bg-[#131B2C] rounded-2xl p-8 border border-gray-800 shadow-xl">
-        <h3 class="text-lg font-bold text-white mb-6">Upload KYC Document</h3>
+        <h3 class="text-lg font-bold text-white mb-6">Upload KYC Document & Details</h3>
+
+        <form [formGroup]="kycForm" class="space-y-4 mb-6">
+          <!-- Full Name -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-400 mb-2">Full Name</label>
+            <input type="text" formControlName="fullName"
+                   class="w-full bg-[#0A0F18] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition">
+          </div>
+
+          <!-- Email & Phone Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-400 mb-2">Email Address</label>
+              <input type="email" formControlName="email"
+                     class="w-full bg-[#0A0F18] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-400 mb-2">Phone Number</label>
+              <input type="tel" formControlName="phone"
+                     class="w-full bg-[#0A0F18] border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition">
+            </div>
+          </div>
+        </form>
 
         <!-- File Upload Area -->
+        <h4 class="text-sm font-semibold text-gray-400 mb-2">Document</h4>
         <div class="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-cyan-500/50 transition cursor-pointer group mb-6 relative overflow-hidden" (click)="fileInput.click()">
           <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition"></div>
           <div class="relative z-10">

@@ -14,7 +14,7 @@ export class ShellComponent {
   constructor(
     public readonly session: SessionService,
     private readonly router: Router
-  ) {}
+  ) { }
 
   logout(): void {
     this.session.logout();

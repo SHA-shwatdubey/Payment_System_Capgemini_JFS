@@ -3,5 +3,17 @@ spring:
     name: wallet-service
   config:
     import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+  cache:
+    type: redis
 
 

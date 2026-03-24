@@ -1,0 +1,169 @@
+<section class="p-8">
+  <div class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-white">Rewards & Campaigns</h1>
+      <p class="text-gray-400 mt-2">Manage reward campaigns and earning rules</p>
+    </div>
+    <button (click)="toggleCreateForm()" class="px-5 py-2.5 rounded-lg font-semibold transition"
+      [ngClass]="showCreateForm ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:scale-[1.02]'">
+      {{ showCreateForm ? '✕ Cancel' : '+ Create Campaign' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="p-4 mb-6 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <p class="text-red-400">{{ error }}</p>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div *ngIf="showCreateForm"
+    class="bg-[#131B2C] rounded-2xl p-6 border border-purple-500/30 shadow-xl mb-8 animate-fade-in-down">
+    <h3 class="text-xl font-bold text-white mb-6">{{ editingId ? 'Edit Campaign' : 'Create New Campaign' }}</h3>
+    <form [formGroup]="campaignForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Campaign Name*</label>
+          <input formControlName="name" placeholder="e.g., Summer Bonus Challenge"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white focus:ring-2 focus:ring-purple-500/50">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Reward Type*</label>
+          <select formControlName="rewardType"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+            <option value="BONUS_POINTS">Bonus Points</option>
+            <option value="CASHBACK">Cashback</option>
+            <option value="MULTIPLIER">Multiplier</option>
+          </select>
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-white mb-2 block">Description*</label>
+          <textarea formControlName="description" rows="2" placeholder="Describe the campaign..."
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white"></textarea>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Reward Value*</label>
+          <input formControlName="rewardValue" type="number" placeholder="100"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Max Claims</label>
+          <input formControlName="maxClaims" type="number" placeholder="0 = unlimited"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Start Date*</label>
+          <input formControlName="startDate" type="date"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">End Date*</label>
+          <input formControlName="endDate" type="date"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Status*</label>
+          <select formControlName="status"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="UPCOMING">Upcoming</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-white mb-2 block">Eligible Tier</label>
+          <select formControlName="eligibleUserTier"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white">
+            <option value="ALL">All Users</option>
+            <option value="SILVER">Silver & Above</option>
+            <option value="GOLD">Gold & Above</option>
+            <option value="PLATINUM">Platinum Only</option>
+          </select>
+        </div>
+      </div>
+      <button (click)="saveCampaign()" [disabled]="saving || campaignForm.invalid"
+        class="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition">
+        {{ saving ? 'Saving...' : (editingId ? 'Update Campaign' : 'Create Campaign') }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex items-center justify-center h-64 bg-[#131B2C] rounded-2xl border border-gray-800">
+    <div class="animate-spin w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full"></div>
+  </div>
+
+  <!-- Campaigns Grid -->
+  <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div *ngFor="let campaign of campaigns"
+      class="bg-[#131B2C] rounded-2xl p-6 border border-gray-800 shadow-xl hover:border-purple-500/30 transition group relative overflow-hidden">
+      <!-- Glow -->
+      <div
+        class="absolute top-0 right-0 w-24 h-24 rounded-full blur-[30px] transition-opacity opacity-0 group-hover:opacity-100"
+        [ngClass]="campaign.status === 'ACTIVE' ? 'bg-green-500/10' : 'bg-gray-500/10'"></div>
+
+      <div class="relative z-10">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-white">{{ campaign.name }}</h3>
+            <p class="text-sm text-gray-400 mt-1">{{ campaign.description }}</p>
+          </div>
+          <span [ngClass]="getStatusColor(campaign.status)"
+            class="px-3 py-1 rounded-full text-xs font-bold border whitespace-nowrap">
+            {{ campaign.status }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Type</p>
+            <span [ngClass]="getRewardTypeColor(campaign.rewardType)"
+              class="inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium border">
+              {{ campaign.rewardType }}
+            </span>
+          </div>
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Value</p>
+            <p class="text-white font-bold">{{ campaign.rewardValue }}</p>
+          </div>
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Duration</p>
+            <p class="text-gray-300 text-xs">{{ campaign.startDate | date:'MMM d' }} - {{ campaign.endDate | date:'MMM
+              d, y' }}</p>
+          </div>
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Claims</p>
+            <p class="text-gray-300 text-sm">{{ campaign.currentClaims || 0 }} / {{ campaign.maxClaims || '∞' }}</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-4 border-t border-gray-800">
+          <button (click)="editCampaign(campaign)"
+            class="flex-1 px-3 py-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 text-xs font-semibold transition">
+            ✏️ Edit
+          </button>
+          <button (click)="toggleCampaignStatus(campaign)"
+            class="flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition"
+            [ngClass]="campaign.status === 'ACTIVE' ? 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20'">
+            {{ campaign.status === 'ACTIVE' ? '⏸ Deactivate' : '▶ Activate' }}
+          </button>
+          <button (click)="deleteCampaign(campaign)"
+            class="px-2.5 py-2 rounded-lg bg-red-600/10 text-red-500 border border-red-600/30 hover:bg-red-600/20 transition text-xs font-semibold"
+            title="Delete Permanently">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && campaigns.length === 0 && !showCreateForm"
+    class="text-center p-12 bg-[#131B2C] rounded-2xl border border-gray-800">
+    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <p class="text-gray-400 mb-2">No campaigns yet</p>
+    <p class="text-gray-500 text-sm">Create your first reward campaign to incentivize users</p>
+  </div>
+</section>

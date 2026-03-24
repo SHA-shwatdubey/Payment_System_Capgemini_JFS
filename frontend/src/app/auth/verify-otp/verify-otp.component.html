@@ -1,0 +1,11 @@
+<p>verify-otp works!</p>
+
+<div class="resend-section">
+  <span *ngIf="resendTimer > 0" class="timer-text">Resend code in <strong>{{ resendTimer }}s</strong></span>
+  <button *ngIf="resendTimer === 0" type="button" (click)="resendOtp()" class="resend-btn">
+    Resend Code
+  </button>
+</div>
+</form>
+</div>
+</div>

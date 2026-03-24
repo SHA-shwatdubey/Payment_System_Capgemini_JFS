@@ -66,9 +66,12 @@ public class UserKycController {
     @PostMapping(value = "/api/kyc/upload/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UserProfile submitKycWithFile(
             @PathVariable("userId") @Positive(message = "userId must be positive") Long userId,
-            @RequestParam("document") MultipartFile document
+            @RequestParam("document") MultipartFile document,
+            @RequestParam(value = "fullName", required = false) String fullName,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "phone", required = false) String phone
     ) {
-        return service.submitKycFile(userId, document);
+        return service.submitKycFile(userId, document, fullName, email, phone);
     }
 
     @PutMapping("/api/kyc/{userId}/status")

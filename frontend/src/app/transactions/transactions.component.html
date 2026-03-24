@@ -1,13 +1,28 @@
 <section class="max-w-6xl mx-auto pb-12">
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Transaction History</h1>
+      <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
+        Transaction History</h1>
       <p class="text-gray-400 mt-2">View and track all your transactions</p>
     </div>
-    <button (click)="exportTransactions()" class="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition font-medium text-sm">
-      <svg class="w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3m15-6A9 9 0 005.5 19.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      Export
-    </button>
+    <div class="flex gap-2">
+      <button (click)="exportTransactions('CSV')" [disabled]="downloading || filtered.length === 0"
+        class="px-4 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 transition font-medium text-sm">
+        <svg class="w-4 h-4 inline mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        {{ downloading ? 'Downloading...' : 'Export CSV' }}
+      </button>
+      <button (click)="exportTransactions('PDF')" [disabled]="downloading || filtered.length === 0"
+        class="px-4 py-2 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/30 hover:bg-purple-500/30 disabled:opacity-50 transition font-medium text-sm">
+        <svg class="w-4 h-4 inline mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        {{ downloading ? 'Downloading...' : 'Export PDF' }}
+      </button>
+    </div>
   </div>
 
   <!-- Filter Card -->
@@ -16,33 +31,47 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="text-sm font-semibold text-white mb-2 block">Filter by Type</label>
-          <select formControlName="type" class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
+          <select formControlName="type"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
             <option value="">All Types</option>
             <option value="TOPUP">Top Up</option>
             <option value="TRANSFER">Transfer</option>
-            <option value="REWARD">Reward Redemption</option>
+            <option value="PAYMENT">Payment</option>
             <option value="REFUND">Refund</option>
           </select>
         </div>
         <div>
           <label class="text-sm font-semibold text-white mb-2 block">Filter by Status</label>
-          <select formControlName="status" class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
+          <select formControlName="status"
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2.5 px-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all">
             <option value="">All Statuses</option>
             <option value="SUCCESS">Success</option>
             <option value="PENDING">Pending</option>
             <option value="FAILED">Failed</option>
-            <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
       </div>
-      <button type="button" (click)="applyFilters()" class="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:scale-[1.02] active:scale-[0.98] transition">
+      <button type="button" (click)="applyFilters()"
+        class="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:scale-[1.02] active:scale-[0.98] transition">
         Apply Filters
       </button>
     </form>
   </div>
 
+  <!-- Loading Spinner -->
+  <div *ngIf="loading"
+    class="flex flex-col items-center justify-center h-48 bg-[#131B2C]/80 border border-gray-800 rounded-2xl backdrop-blur-md mb-6">
+    <div class="animate-spin w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full mb-3"></div>
+    <p class="text-cyan-400 font-medium">Loading transactions...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !loading" class="p-4 mb-6 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <p class="text-red-400 font-medium">⚠️ {{ error }}</p>
+  </div>
+
   <!-- Transactions Table -->
-  <div class="bg-[#131B2C] rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
+  <div *ngIf="!loading" class="bg-[#131B2C] rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
     <div class="p-6 border-b border-gray-800 flex items-center justify-between">
       <h3 class="text-lg font-bold text-white">{{ filtered.length }} Transactions Found</h3>
       <span class="text-sm text-gray-400">Page {{ page }} of {{ totalPages }}</span>
@@ -58,6 +87,7 @@
             <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
             <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Details</th>
             <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+            <th class="p-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Receipt</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-800">
@@ -90,6 +120,16 @@
                 <p class="text-gray-500 text-xs">{{ item.createdAt | date:'h:mm a' }}</p>
               </div>
             </td>
+            <td class="p-4">
+              <button (click)="downloadReceipt(item.id)"
+                class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs font-medium transition">
+                <svg class="w-3.5 h-3.5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3" />
+                </svg>
+                PDF
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -97,17 +137,19 @@
 
     <ng-template #empty>
       <div class="p-12 text-center">
-        <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
         <p class="text-gray-400 mb-2">No transactions found</p>
         <p class="text-gray-500 text-sm">Try adjusting your filters or start making transactions</p>
       </div>
     </ng-template>
 
     <!-- Pagination -->
-    <div *ngIf="pagedItems.length" class="bg-gray-800/40 border-t border-gray-800 px-6 py-4 flex items-center justify-between">
-      <button
-        (click)="prev()"
-        [disabled]="page === 1"
+    <div *ngIf="pagedItems.length"
+      class="bg-gray-800/40 border-t border-gray-800 px-6 py-4 flex items-center justify-between">
+      <button (click)="prev()" [disabled]="page === 1"
         class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:border-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm">
         ← Previous
       </button>
@@ -119,13 +161,10 @@
           <span class="text-gray-400">{{ totalPages }}</span>
         </div>
       </div>
-      <button
-        (click)="next()"
-        [disabled]="page === totalPages"
+      <button (click)="next()" [disabled]="page === totalPages"
         class="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-sm">
         Next →
       </button>
     </div>
   </div>
 </section>
-

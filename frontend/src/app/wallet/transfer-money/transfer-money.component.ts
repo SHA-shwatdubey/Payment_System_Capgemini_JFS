@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { SessionService } from '../../shared/services/session.service';
+import { DataRefreshService } from '../../shared/services/data-refresh.service';
 
 @Component({
   selector: 'app-transfer-money',
@@ -26,7 +27,8 @@ export class TransferMoneyComponent {
 
   constructor(
     private readonly api: ApiService,
-    private readonly session: SessionService
+    private readonly session: SessionService,
+    private readonly dataRefresh: DataRefreshService
   ) {}
 
   setAmount(amount: number): void {
@@ -56,6 +58,7 @@ export class TransferMoneyComponent {
         next: (res) => {
           this.message = res.message || 'Transfer completed.';
           this.form.reset({ toUserId: null, amount: null });
+          this.dataRefresh.refreshAll();
         },
         error: (err) => {
           this.error = err?.error?.message || 'Transfer failed.';

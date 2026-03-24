@@ -5,6 +5,7 @@ import com.wallet.transaction.dto.PaymentRequest;
 import com.wallet.transaction.dto.RefundRequest;
 import com.wallet.transaction.dto.TopupRequest;
 import com.wallet.transaction.dto.TransactionResponse;
+import com.wallet.transaction.dto.TransactionHistoryEvent;
 import com.wallet.transaction.dto.TransferRequest;
 import com.wallet.transaction.dto.WalletEvent;
 import com.wallet.transaction.entity.EntryType;
@@ -19,6 +20,8 @@ import com.wallet.transaction.repository.LedgerEntryRepository;
 import com.wallet.transaction.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,18 +42,22 @@ public class TransactionService {
     private final LedgerEntryRepository ledgerEntryRepository;
     private final UserClient userClient;
     private final RewardEventPublisher rewardEventPublisher;
+    private final TransactionEventPublisher transactionEventPublisher;
 
     public TransactionService(TransactionRepository transactionRepository,
                               LedgerEntryRepository ledgerEntryRepository,
                               UserClient userClient,
-                              RewardEventPublisher rewardEventPublisher) {
+                              RewardEventPublisher rewardEventPublisher,
+                              TransactionEventPublisher transactionEventPublisher) {
         this.transactionRepository = transactionRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.userClient = userClient;
         this.rewardEventPublisher = rewardEventPublisher;
+        this.transactionEventPublisher = transactionEventPublisher;
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
+    @CacheEvict(cacheNames = "transactionHistory", allEntries = true)
     public TransactionResponse topup(TopupRequest request) {
         Optional<Transaction> existing = transactionRepository.findByIdempotencyKey(request.idempotencyKey());
         if (existing.isPresent()) {
@@ -72,6 +79,7 @@ public class TransactionService {
             saveLedgerPair(transaction, SYSTEM_ACCOUNT_ID, request.userId(), request.amount());
             markSuccess(transaction);
             publishRewardEvent(request.userId(), transaction.getType(), request.amount());
+            publishTransactionHistoryEvent(transaction);
             log.info("Topup successful transactionId={} userId={} amount={}", transaction.getId(), request.userId(), request.amount());
             return TransactionResponse.from(transaction);
         } catch (RuntimeException ex) {
@@ -81,6 +89,7 @@ public class TransactionService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
+    @CacheEvict(cacheNames = "transactionHistory", allEntries = true)
     public TransactionResponse transfer(TransferRequest request) {
         if (request.senderId().equals(request.receiverId())) {
             throw new IllegalArgumentException("Sender and receiver cannot be same for transfer");
@@ -108,6 +117,7 @@ public class TransactionService {
             saveLedgerPair(transaction, request.senderId(), request.receiverId(), request.amount());
             markSuccess(transaction);
             publishRewardEvent(request.senderId(), transaction.getType(), request.amount());
+            publishTransactionHistoryEvent(transaction);
             log.info("Transfer successful transactionId={} senderId={} receiverId={} amount={}",
                     transaction.getId(), request.senderId(), request.receiverId(), request.amount());
             return TransactionResponse.from(transaction);
@@ -118,6 +128,7 @@ public class TransactionService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
+    @CacheEvict(cacheNames = "transactionHistory", allEntries = true)
     public TransactionResponse payment(PaymentRequest request) {
         if (request.senderId().equals(request.receiverId())) {
             throw new IllegalArgumentException("Sender and receiver cannot be same for payment");
@@ -145,6 +156,7 @@ public class TransactionService {
             saveLedgerPair(transaction, request.senderId(), request.receiverId(), request.amount());
             markSuccess(transaction);
             publishRewardEvent(request.senderId(), transaction.getType(), request.amount());
+            publishTransactionHistoryEvent(transaction);
             log.info("Payment successful transactionId={} senderId={} receiverId={} amount={}",
                     transaction.getId(), request.senderId(), request.receiverId(), request.amount());
             return TransactionResponse.from(transaction);
@@ -155,6 +167,7 @@ public class TransactionService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
+    @CacheEvict(cacheNames = "transactionHistory", allEntries = true)
     public TransactionResponse refund(RefundRequest request) {
         if (request.senderId().equals(request.receiverId())) {
             throw new IllegalArgumentException("Sender and receiver cannot be same for refund");
@@ -189,6 +202,7 @@ public class TransactionService {
             saveLedgerPair(transaction, request.senderId(), request.receiverId(), request.amount());
             markSuccess(transaction);
             publishRewardEvent(request.receiverId(), transaction.getType(), request.amount());
+            publishTransactionHistoryEvent(transaction);
             log.info("Refund successful transactionId={} senderId={} receiverId={} amount={} originalTransactionId={}",
                     transaction.getId(), request.senderId(), request.receiverId(), request.amount(), request.originalTransactionId());
             return TransactionResponse.from(transaction);
@@ -206,6 +220,7 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "transactionHistory", key = "#userId")
     public List<TransactionResponse> getByUser(Long userId) {
         validateUser(userId);
         return transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId)
@@ -215,6 +230,7 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "transactionHistory", key = "#from.toString() + '-' + #to.toString()")
     public List<TransactionResponse> getHistory(LocalDateTime from, LocalDateTime to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("from must be before to");
@@ -285,6 +301,27 @@ public class TransactionService {
 
     private void publishRewardEvent(Long userId, TransactionType type, BigDecimal amount) {
         rewardEventPublisher.publish(new WalletEvent(userId, type.name(), amount));
+    }
+
+    private void publishTransactionHistoryEvent(Transaction transaction) {
+        try {
+            TransactionHistoryEvent event = new TransactionHistoryEvent(
+                    transaction.getId(),
+                    transaction.getUserId(),
+                    transaction.getSenderId(),
+                    transaction.getReceiverId(),
+                    transaction.getAmount(),
+                    transaction.getType(),
+                    transaction.getStatus(),
+                    transaction.getCreatedAt(),
+                    transaction.getIdempotencyKey()
+            );
+            transactionEventPublisher.publishTransactionEvent(event);
+            log.debug("Published transaction history event for transactionId={}", transaction.getId());
+        } catch (Exception e) {
+            log.error("Error publishing transaction history event for transactionId={}", transaction.getId(), e);
+            // Don't fail the transaction if event publishing fails
+        }
     }
 
     private void validateExistingForTopup(Transaction existing, TopupRequest request) {

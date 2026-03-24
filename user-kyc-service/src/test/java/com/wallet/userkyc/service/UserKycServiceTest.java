@@ -98,7 +98,7 @@ class UserKycServiceTest {
     void submitKycFile_withInvalidType_throwsError() {
         MockMultipartFile file = new MockMultipartFile("document", "a.txt", "text/plain", "x".getBytes());
 
-        assertThatThrownBy(() -> userKycService.submitKycFile(3L, file))
+        assertThatThrownBy(() -> userKycService.submitKycFile(3L, file, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Only PDF");
     }
@@ -115,7 +115,7 @@ class UserKycServiceTest {
                 .thenReturn(new KycVerifyResponse("r2", "VERIFIED", "ok"));
         when(repository.save(any(UserProfile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserProfile saved = userKycService.submitKycFile(4L, file);
+        UserProfile saved = userKycService.submitKycFile(4L, file, "John Doe", "john@example.com", "1234567890");
 
         assertThat(saved.getKycStatus()).isEqualTo("PENDING");
         assertThat(saved.getKycDocumentName()).isEqualTo("id.pdf");

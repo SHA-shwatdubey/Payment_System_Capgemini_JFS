@@ -51,7 +51,7 @@ public class TransactionController {
         return transactionService.refund(request);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public TransactionResponse getById(@PathVariable("id") Long id) {
         return transactionService.getById(id);
     }

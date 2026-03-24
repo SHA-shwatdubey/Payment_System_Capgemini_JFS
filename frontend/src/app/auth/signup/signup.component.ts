@@ -28,7 +28,7 @@ export class SignupComponent {
   constructor(
     private readonly authApi: AuthApiService,
     private readonly router: Router
-  ) {}
+  ) { }
 
   signup(): void {
     if (this.signupForm.invalid) {

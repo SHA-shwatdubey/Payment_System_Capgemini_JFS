@@ -1,67 +1,43 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { ApiService } from '../../shared/services/api.service';
-import { NotificationStats, UserProfile } from '../../shared/models/app.models';
+import { AdminService, AdminDashboardStats } from '../../shared/services/admin.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss'
 })
 export class AdminDashboardComponent implements OnInit {
-  kpis: Record<string, number> = {};
-  stats: NotificationStats | null = null;
-  pendingKyc: UserProfile[] = [];
-  actionMessage = '';
+  stats: AdminDashboardStats | null = null;
+  loading = false;
+  error: string | null = null;
 
-  readonly actionForms: Record<number, ReturnType<FormBuilder['group']>> = {};
-
-  constructor(
-    private readonly api: ApiService,
-    private readonly fb: FormBuilder
-  ) {}
+  constructor(private readonly adminService: AdminService) {}
 
   ngOnInit(): void {
-    forkJoin({
-      dashboard: this.api.getAdminDashboard(),
-      notifications: this.api.getNotificationStats(),
-      pending: this.api.getPendingKyc()
-    }).subscribe({
-      next: (res) => {
-        this.kpis = res.dashboard;
-        this.stats = res.notifications;
-        this.pendingKyc = res.pending;
-        this.pendingKyc.forEach((user) => {
-          if (!user.id) {
-            return;
-          }
-          this.actionForms[user.id] = this.fb.group({
-            status: ['APPROVED'],
-            reason: ['Reviewed by admin']
-          });
-        });
-      }
-    });
+    this.loadDashboardStats();
   }
 
-  submitStatus(userId: number): void {
-    const form = this.actionForms[userId];
-    if (!form) {
-      return;
-    }
+  loadDashboardStats(): void {
+    console.log('📊 [ADMIN-DASHBOARD] Loading statistics...');
+    this.loading = true;
+    this.error = null;
 
-    const status = String(form.value.status || 'APPROVED');
-    const reason = String(form.value.reason || 'Reviewed by admin');
-    this.api.updateKycStatus(userId, status, reason).subscribe({
-      next: () => {
-        this.actionMessage = `KYC ${status} for user ${userId}`;
-        this.pendingKyc = this.pendingKyc.filter((u) => u.id !== userId);
+    this.adminService.getDashboardStats().subscribe({
+      next: (stats) => {
+        console.log('✅ [ADMIN-DASHBOARD] Stats loaded:', stats);
+        this.stats = stats;
+        this.loading = false;
+      },
+      error: (err: any) => {
+        console.error('❌ [ADMIN-DASHBOARD] Error loading stats:', err);
+        this.error = 'Failed to load dashboard statistics';
+        this.loading = false;
       }
     });
   }
 }
+
 

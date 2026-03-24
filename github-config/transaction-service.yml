@@ -17,6 +17,12 @@ spring:
     port: 5672
     username: guest
     password: guest
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
 
 management:
   endpoints:
@@ -30,5 +36,6 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
 
 

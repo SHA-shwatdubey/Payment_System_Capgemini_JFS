@@ -12,6 +12,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(Long userId, Long senderId, Long receiverId);
 
+    List<TransactionReadProjection> findProjectedByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(Long userId, Long senderId, Long receiverId);
+
     List<Transaction> findByCreatedAtBetweenOrderByCreatedAtDesc(LocalDateTime from, LocalDateTime to);
 }
+
 

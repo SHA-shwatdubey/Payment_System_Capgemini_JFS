@@ -4,7 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthApiService } from '../auth-api.service';
-import { SessionService } from '../../shared/services/session.service';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -35,9 +35,9 @@ export class LoginComponent {
 
   constructor(
     private readonly authApi: AuthApiService,
-    private readonly session: SessionService,
+    private readonly authService: AuthService,
     private readonly router: Router
-  ) {}
+  ) { }
 
   toggleOtpSection(): void {
     this.showOtpSection = !this.showOtpSection;
@@ -53,19 +53,29 @@ export class LoginComponent {
     this.error = '';
 
     const { identifier, password } = this.loginForm.getRawValue();
-    this.authApi.login(identifier!, password!)
+    this.authService.login(identifier!, password!)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (response) => {
           if (!response.token) {
             this.error = 'Login succeeded but token missing.';
+            console.error('No token in login response:', response);
             return;
           }
-          this.session.saveToken(response.token);
-          this.router.navigate(['/dashboard']);
+          console.log('Login successful, token saved, navigating...');
+
+          // Determine redirect based on role
+          const role = (response.role || '').toUpperCase();
+          const targetRoute = role === 'ADMIN' ? '/admin/dashboard' : '/dashboard';
+          console.log('Redirecting to:', targetRoute, '(role:', role, ')');
+
+          setTimeout(() => {
+            this.router.navigate([targetRoute]);
+          }, 500);
         },
         error: (err) => {
           this.error = this.extractApiError(err, 'Login failed. Check credentials.');
+          console.error('Login error:', err);
         }
       });
   }

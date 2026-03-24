@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../shared/services/api.service';
 import { SessionService } from '../../shared/services/session.service';
+import { DataRefreshService } from '../../shared/services/data-refresh.service';
 
 @Component({
   selector: 'app-add-money',
@@ -26,7 +27,8 @@ export class AddMoneyComponent {
 
   constructor(
     private readonly api: ApiService,
-    private readonly session: SessionService
+    private readonly session: SessionService,
+    private readonly dataRefresh: DataRefreshService
   ) {}
 
   setAmount(amount: number): void {
@@ -56,6 +58,7 @@ export class AddMoneyComponent {
         next: (res) => {
           this.message = `Wallet credited. New balance: ₹${res.balance}`;
           this.form.reset({ amount: null, method: 'UPI' });
+          this.dataRefresh.refreshAll();
         },
         error: (err) => {
           this.error = err?.error?.message || 'Topup failed.';

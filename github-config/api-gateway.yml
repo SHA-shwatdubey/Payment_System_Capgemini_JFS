@@ -33,7 +33,7 @@ spring:
         - id: wallet-service
           uri: lb://wallet-service
           predicates:
-            - Path=/api/wallet/**
+            - Path=/api/wallet/**,/wallet/**
         - id: rewards-service
           uri: lb://rewards-service
           predicates:

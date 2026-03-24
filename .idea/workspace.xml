@@ -5,20 +5,73 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77c77317-8c51-480a-bce2-d9b1899e8a8e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci-cd.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/ci-cd.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FINAL_DEPLOYMENT_INSTRUCTIONS.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/GITHUB_SECRETS_SETUP.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/INSTANT_DEPLOY.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/QUICK_REFERENCE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_DEPLOYMENT.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/READY_TO_DEPLOY.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/SETUP_CHECKLIST.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/FIX_TARGET_GROUP_ERROR.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/GITHUB_ACTIONS_FIX.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/RECOVERY_GUIDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/SOLUTION_SUMMARY.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/VPC_LIMIT_FIX.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/terraform/VPC_LIMIT_QUICK_FIX.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEPLOYMENT_COMPLETE.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEPLOYMENT_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/INFRASTRUCTURE_README.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/controller/AdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/entity/Campaign.java" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/entity/Campaign.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/main/java/com/wallet/admin/service/AdminService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/wallet/apigateway/security/JwtAuthGlobalFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/wallet/apigateway/security/JwtAuthGlobalFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/angular.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/angular.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/admin/admin-dashboard/admin-dashboard.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/admin/admin-dashboard/admin-dashboard.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/admin/admin-dashboard/admin-dashboard.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/admin/admin-dashboard/admin-dashboard.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/app.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/app.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/app.routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/app.routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/dashboard/dashboard.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/dashboard/dashboard.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/dashboard/dashboard.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/dashboard/dashboard.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/kyc/kyc.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/kyc/kyc.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/kyc/kyc.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/kyc/kyc.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/rewards/rewards.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/rewards/rewards.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/rewards/rewards.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/rewards/rewards.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/components/shell/shell.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/components/shell/shell.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/components/shell/shell.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/components/shell/shell.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/interceptors/auth.interceptor.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/interceptors/auth.interceptor.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/models/app.models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/models/app.models.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/services/api.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/services/api.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/shared/services/session.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/shared/services/session.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/transactions/transactions.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/transactions/transactions.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/transactions/transactions.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/transactions/transactions.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/wallet/add-money/add-money.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/wallet/add-money/add-money.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/wallet/transfer-money/transfer-money.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/wallet/transfer-money/transfer-money.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/environments/environment.prod.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/environments/environment.prod.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/styles.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/styles.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/api-gateway.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/api-gateway.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/transaction-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/transaction-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/wallet-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/wallet-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/TransactionServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/TransactionServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/config/RabbitConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/config/RabbitConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/controller/TransactionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/controller/TransactionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/repository/TransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/service/TransactionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/service/TransactionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/main/java/com/wallet/userkyc/controller/UserKycController.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/main/java/com/wallet/userkyc/controller/UserKycController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/main/java/com/wallet/userkyc/service/UserKycService.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/main/java/com/wallet/userkyc/service/UserKycService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/test/java/com/wallet/userkyc/controller/UserKycControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/test/java/com/wallet/userkyc/controller/UserKycControllerTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/test/java/com/wallet/userkyc/service/UserKycServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/test/java/com/wallet/userkyc/service/UserKycServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/WalletServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/WalletServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/config/RabbitConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/config/RabbitConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/entity/LedgerEntry.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/entity/LedgerEntry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletEventPublisher.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletEventPublisher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletService.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +87,12 @@
   </component>
   <component name="CopilotUserSelectedChatMode">
     <option name="chatModeId" value="Agent" />
+  </component>
+  <component name="CopilotUserSelectedModel">
+    <selectedModels>
+      <entry key="chat-panel" value="Claude Haiku 4.5" />
+      <entry key="agent-panel" value="Claude Haiku 4.5" />
+    </selectedModels>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -95,7 +154,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
   }
 }</component>
-  <component name="RunManager" selected="JUnit.All in wallet-service">
+  <component name="RunManager" selected="JUnit.All in notification-service">
     <configuration name="All in notification-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="notification-service" />
       <option name="PACKAGE_NAME" value="" />
@@ -173,6 +232,17 @@
       <updated>1773720640343</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>

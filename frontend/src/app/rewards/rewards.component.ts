@@ -14,6 +14,7 @@ import { RewardCatalogItem, RewardsAccount } from '../shared/models/app.models';
 export class RewardsComponent implements OnInit {
   summary: RewardsAccount | null = null;
   catalog: RewardCatalogItem[] = [];
+  campaigns: any[] = [];
   message = '';
   error = '';
 
@@ -30,6 +31,7 @@ export class RewardsComponent implements OnInit {
 
     this.api.getRewardsSummary(userId).subscribe((res) => (this.summary = res));
     this.api.getRewardsCatalog().subscribe((res) => (this.catalog = res));
+    this.api.getActiveCampaigns().subscribe((res) => (this.campaigns = res));
   }
 
   getTierColor(): string {

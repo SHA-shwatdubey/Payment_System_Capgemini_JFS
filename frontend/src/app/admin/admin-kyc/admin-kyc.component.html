@@ -1,0 +1,88 @@
+<section class="p-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-white">KYC Approvals</h1>
+    <p class="text-gray-400 mt-2">Review and approve pending KYC requests</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex items-center justify-center h-64 bg-[#131B2C] rounded-2xl border border-gray-800">
+    <div class="animate-spin w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading" class="p-4 mb-6 bg-red-500/10 border border-red-500/30 rounded-lg">
+    <p class="text-red-400">{{ error }}</p>
+  </div>
+
+  <!-- KYC Cards -->
+  <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div *ngFor="let req of kycRequests" class="bg-[#131B2C] rounded-2xl p-6 border border-gray-800 shadow-xl">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-white">{{ req.username }}</h3>
+          <p class="text-sm text-gray-400">User ID: {{ req.userId }}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+          {{ req.status }}
+        </span>
+      </div>
+
+      <div class="space-y-3 mb-6">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Email</p>
+            <p class="text-white text-sm font-semibold truncate">{{ req.email }}</p>
+          </div>
+          <div class="bg-gray-800/30 rounded-lg p-3">
+            <p class="text-xs text-gray-500 uppercase">Phone</p>
+            <p class="text-white text-sm font-semibold">{{ req.phone }}</p>
+          </div>
+        </div>
+        <div class="bg-gray-800/30 rounded-lg p-3">
+          <p class="text-xs text-gray-500 uppercase">Document Type</p>
+          <p class="text-white font-semibold">{{ req.documentType }}</p>
+        </div>
+      </div>
+
+      <!-- Approval Form -->
+      <form [formGroup]="actionForms[req.userId]" class="space-y-3">
+        <div>
+          <label class="text-xs text-gray-400 uppercase">Verification Details</label>
+          <textarea formControlName="verificationDetails" placeholder="Enter verification notes..."
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2 px-3 text-white text-sm"></textarea>
+        </div>
+        <div>
+          <label class="text-xs text-gray-400 uppercase">Rejection Reason (if applicable)</label>
+          <input formControlName="reason" placeholder="Enter reason for rejection..."
+            class="w-full bg-[#0A0F18] border border-gray-800 rounded-lg py-2 px-3 text-white text-sm">
+        </div>
+      </form>
+
+      <!-- Actions -->
+      <div class="flex gap-3 mt-6">
+        <button
+          (click)="approveKYC(req.userId)"
+          [disabled]="processingId === req.userId"
+          class="flex-1 px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30 disabled:opacity-50 font-semibold transition">
+          {{ processingId === req.userId ? 'Processing...' : '✓ Approve' }}
+        </button>
+        <button
+          (click)="rejectKYC(req.userId)"
+          [disabled]="processingId === req.userId"
+          class="flex-1 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-50 font-semibold transition">
+          {{ processingId === req.userId ? 'Processing...' : '✗ Reject' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && kycRequests.length === 0" class="text-center p-12 bg-[#131B2C] rounded-2xl border border-gray-800">
+    <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <p class="text-gray-400 mb-2">All KYC requests processed</p>
+    <p class="text-gray-500 text-sm">No pending requests at this time</p>
+  </div>
+</section>
+

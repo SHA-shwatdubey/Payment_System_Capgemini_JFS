@@ -34,6 +34,49 @@ public class AdminService {
         campaign.setBonusPoints(request.bonusPoints());
         campaign.setStartDate(request.startDate());
         campaign.setEndDate(request.endDate());
+        campaign.setActive(true);
+        campaign.setStatus("ACTIVE");
+        return campaignRepository.save(campaign);
+    }
+
+    public List<Campaign> getCampaigns() {
+        return campaignRepository.findAll();
+    }
+
+    public Campaign updateCampaign(Long id, Map<String, Object> updates) {
+        Campaign campaign = campaignRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Campaign not found: " + id));
+        if (updates.containsKey("status")) {
+            String status = (String) updates.get("status");
+            campaign.setStatus(status);
+            campaign.setActive("ACTIVE".equalsIgnoreCase(status));
+        }
+        if (updates.containsKey("name")) {
+            campaign.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("bonusPoints")) {
+            campaign.setBonusPoints(((Number) updates.get("bonusPoints")).intValue());
+        }
+        return campaignRepository.save(campaign);
+    }
+
+    public void deleteCampaign(Long id) {
+        campaignRepository.deleteById(id);
+    }
+
+    public Campaign deactivateCampaign(Long id) {
+        Campaign campaign = campaignRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Campaign not found: " + id));
+        campaign.setActive(false);
+        campaign.setStatus("INACTIVE");
+        return campaignRepository.save(campaign);
+    }
+
+    public Campaign activateCampaign(Long id) {
+        Campaign campaign = campaignRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Campaign not found: " + id));
+        campaign.setActive(true);
+        campaign.setStatus("ACTIVE");
         return campaignRepository.save(campaign);
     }
 
@@ -61,4 +104,3 @@ public class AdminService {
         );
     }
 }
-

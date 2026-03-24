@@ -48,6 +48,7 @@ export interface RewardCatalogItem {
 
 export interface UserProfile {
   id?: number;
+  authUserId?: number;
   fullName: string;
   email: string;
   phone: string;
@@ -71,5 +72,9 @@ export interface NotificationMessage {
   status: string;
   failureReason?: string;
   createdAt: string;
+  title?: string;
+  subject?: string;
+  body?: string;
+  type?: string;
 }
 

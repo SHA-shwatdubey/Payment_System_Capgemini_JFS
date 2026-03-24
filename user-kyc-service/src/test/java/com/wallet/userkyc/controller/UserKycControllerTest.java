@@ -127,7 +127,7 @@ class UserKycControllerTest {
         response.setId(7L);
         response.setKycStatus("PENDING");
 
-        when(userKycService.submitKycFile(eq(7L), any())).thenReturn(response);
+        when(userKycService.submitKycFile(eq(7L), any(), any(), any(), any())).thenReturn(response);
 
         mockMvc.perform(multipart("/api/kyc/upload/7").file(file))
                 .andExpect(status().isOk())
