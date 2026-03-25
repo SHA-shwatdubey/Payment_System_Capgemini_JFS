@@ -14,4 +14,18 @@ security:
   jwt:
     secret: ${JWT_SECRET:Q2FwZ2VtaW5pV2FsbGV0SldUU2VjcmV0S2V5Rm9yR2F0ZXdheUFuZFNlcnZpY2VzMTIzNDU2}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_URL:http://localhost:9411/api/v2/spans}
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

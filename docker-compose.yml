@@ -63,6 +63,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # Distributed Tracing
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - microservices
+    restart: always
+
   # Config Server (BUILT LOCALLY)
   config-server:
     build:
@@ -72,11 +82,8 @@ services:
     container_name: config-server
     environment:
       SERVER_PORT: 8060
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_CLOUD_CONFIG_SERVER_GIT_URI: https://github.com/SHA-shwatdubey/Payment_System_Capgemini_JFS.git
-      SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL: main
-      SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS: github-config
-      SPRING_CLOUD_CONFIG_SERVER_GIT_CLONE_ON_START: "true"
+      SPRING_PROFILES_ACTIVE: native,docker
+      SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo/
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
     ports:
       - "8060:8060"
@@ -87,9 +94,9 @@ services:
     restart: always
     depends_on:
       wallet-postgres:
-        condition: service_healthy
+        condition: service_started
       wallet-rabbitmq:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8060/actuator/info"]
       start_period: 40s
@@ -131,8 +138,10 @@ services:
     container_name: api-gateway
     environment:
       SERVER_PORT: 8062
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8062:8062"
     networks:
@@ -162,6 +171,7 @@ services:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8060
       SPRING_CLOUD_CONFIG_ENABLED: "true"
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: admin123
@@ -197,7 +207,7 @@ services:
     image: local/user-kyc-service:latest
     container_name: user-kyc-service
     environment:
-      SERVER_PORT: 8064
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -206,6 +216,7 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8064:8064"
     networks:
@@ -229,7 +240,7 @@ services:
     image: local/wallet-service:latest
     container_name: wallet-service
     environment:
-      SERVER_PORT: 8065
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -238,10 +249,11 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
       RABBITMQ_HOST: wallet-rabbitmq
       RABBITMQ_PORT: 5672
-      REDIS_HOST: wallet-redis
-      REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: wallet-redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "8065:8065"
     networks:
@@ -267,7 +279,7 @@ services:
     image: local/rewards-service:latest
     container_name: rewards-service
     environment:
-      SERVER_PORT: 8066
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -276,6 +288,7 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8066:8066"
     networks:
@@ -299,7 +312,7 @@ services:
     image: local/admin-service:latest
     container_name: admin-service
     environment:
-      SERVER_PORT: 8067
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -308,6 +321,7 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8067:8067"
     networks:
@@ -331,7 +345,7 @@ services:
     image: local/transaction-service:latest
     container_name: transaction-service
     environment:
-      SERVER_PORT: 8068
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -340,10 +354,11 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
       RABBITMQ_HOST: wallet-rabbitmq
       RABBITMQ_PORT: 5672
-      REDIS_HOST: wallet-redis
-      REDIS_PORT: 6379
+      SPRING_DATA_REDIS_HOST: wallet-redis
+      SPRING_DATA_REDIS_PORT: 6379
     ports:
       - "8068:8068"
     networks:
@@ -369,7 +384,7 @@ services:
     image: local/notification-service:latest
     container_name: notification-service
     environment:
-      SERVER_PORT: 8069
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -378,6 +393,7 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8069:8069"
     networks:
@@ -401,7 +417,7 @@ services:
     image: local/integration-service:latest
     container_name: integration-service
     environment:
-      SERVER_PORT: 8070
+      SPRING_PROFILES_ACTIVE: docker
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       SPRING_DATASOURCE_URL: jdbc:postgresql://wallet-postgres:5432/wallet_db
@@ -410,6 +426,7 @@ services:
       SPRING_RABBITMQ_HOST: wallet-rabbitmq
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      ZIPKIN_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "8070:8070"
     networks:
