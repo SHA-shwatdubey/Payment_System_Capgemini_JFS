@@ -63,6 +63,12 @@
                 <artifactId>feign-micrometer</artifactId>
                 <version>13.3</version>
             </dependency>
+            <!-- Prometheus Metrics -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+                <version>1.13.2</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

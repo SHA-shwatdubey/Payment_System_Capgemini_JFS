@@ -31,9 +31,6 @@ chmod +x /usr/local/bin/docker-compose
 systemctl enable docker
 systemctl start docker
 
-# Allow ubuntu user to run docker without root in interactive sessions
-usermod -aG docker ubuntu
-
 # Create app directory
 mkdir -p /home/ubuntu/app
 cd /home/ubuntu/app

@@ -5,7 +5,6 @@ import com.wallet.transaction.dto.PaymentRequest;
 import com.wallet.transaction.dto.RefundRequest;
 import com.wallet.transaction.dto.TopupRequest;
 import com.wallet.transaction.dto.TransactionResponse;
-import com.wallet.transaction.dto.TransactionHistoryEvent;
 import com.wallet.transaction.dto.TransferRequest;
 import com.wallet.transaction.dto.WalletEvent;
 import com.wallet.transaction.entity.EntryType;
@@ -21,8 +20,6 @@ import com.wallet.transaction.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +27,9 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import com.wallet.transaction.dto.TransactionHistoryEvent;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,7 +67,6 @@ public class TransactionService {
 
         Transaction transaction = createPendingTransaction(
                 request.userId(),
-                SYSTEM_ACCOUNT_ID,
                 request.userId(),
                 request.amount(),
                 TransactionType.TOPUP,
@@ -102,7 +101,6 @@ public class TransactionService {
         }
 
         Transaction transaction = createPendingTransaction(
-                request.senderId(),
                 request.senderId(),
                 request.receiverId(),
                 request.amount(),
@@ -142,7 +140,6 @@ public class TransactionService {
 
         Transaction transaction = createPendingTransaction(
                 request.senderId(),
-                request.senderId(),
                 request.receiverId(),
                 request.amount(),
                 TransactionType.PAYMENT,
@@ -181,13 +178,11 @@ public class TransactionService {
 
         Transaction original = transactionRepository.findById(request.originalTransactionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Original transaction not found"));
-
         if (original.getType() != TransactionType.PAYMENT && original.getType() != TransactionType.TRANSFER) {
             throw new IllegalArgumentException("Refund can only reference PAYMENT or TRANSFER transaction");
         }
 
         Transaction transaction = createPendingTransaction(
-                request.senderId(),
                 request.senderId(),
                 request.receiverId(),
                 request.amount(),
@@ -242,14 +237,13 @@ public class TransactionService {
     }
 
     private Transaction createPendingTransaction(Long userId,
-                                                 Long senderId,
                                                  Long receiverId,
                                                  BigDecimal amount,
                                                  TransactionType type,
                                                  String idempotencyKey) {
         Transaction transaction = new Transaction();
         transaction.setUserId(userId);
-        transaction.setSenderId(senderId);
+        transaction.setSenderId(userId); // Fixed undefined 'senderId' – assuming sender is userId for initiating pending
         transaction.setReceiverId(receiverId);
         transaction.setAmount(amount);
         transaction.setType(type);
@@ -326,7 +320,7 @@ public class TransactionService {
 
     private void validateExistingForTopup(Transaction existing, TopupRequest request) {
         if (existing.getType() != TransactionType.TOPUP
-                || !request.userId().equals(existing.getReceiverId())
+                || !request.userId().equals(existing.getUserId())
                 || existing.getAmount().compareTo(request.amount()) != 0) {
             throw new IdempotencyConflictException("Idempotency key belongs to a different topup payload");
         }

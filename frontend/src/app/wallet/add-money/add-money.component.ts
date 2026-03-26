@@ -55,12 +55,12 @@ export class AddMoneyComponent {
     this.api.topup(userId, Number(amount), method || 'UPI')
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: (res) => {
+        next: (res: any) => {
           this.message = `Wallet credited. New balance: ₹${res.balance}`;
           this.form.reset({ amount: null, method: 'UPI' });
           this.dataRefresh.refreshAll();
         },
-        error: (err) => {
+        error: (err: any) => {
           this.error = err?.error?.message || 'Topup failed.';
         }
       });

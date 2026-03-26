@@ -7,22 +7,54 @@
     <list default="true" id="77c77317-8c51-480a-bce2-d9b1899e8a8e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CQRS_ARCHITECTURE.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/admin-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api-gateway/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auth-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build_output.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build_progress.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-build.log" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.scss" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/signup/signup.component.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/github-config/application-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/application-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/wallet/add-money/add-money.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/wallet/add-money/add-money.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/wallet/transfer-money/transfer-money.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/wallet/transfer-money/transfer-money.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend_build.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/admin-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/admin-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/admin-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/admin-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/api-gateway.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/api-gateway.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/github-config/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/auth-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/auth-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/auth-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/auth-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/config-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/config-server.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/eureka-server-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/eureka-server-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/eureka-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/eureka-server.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/integration-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/integration-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/integration-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/integration-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/notification-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/notification-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/notification-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/notification-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/rewards-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/rewards-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/rewards-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/rewards-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/transaction-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/transaction-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/transaction-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/transaction-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/user-kyc-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/user-kyc-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/user-kyc-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/user-kyc-service.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/wallet-service-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/wallet-service-docker.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/github-config/wallet-service.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/wallet-service.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/integration-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/integration-service/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/notification-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/rewards-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/rewards-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/startup_output.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/terraform/user_data.sh" beforeDir="false" afterPath="$PROJECT_DIR$/terraform/user_data.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/transaction-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/service/TransactionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/java/com/wallet/transaction/service/TransactionService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user-kyc-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wallet-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/controller/WalletExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/controller/WalletExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletService.java" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/java/com/wallet/wallet/service/WalletService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,8 +73,8 @@
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="Auto" />
-      <entry key="agent-panel" value="Auto" />
+      <entry key="chat-panel" value="Claude Haiku 4.5" />
+      <entry key="agent-panel" value="Claude Haiku 4.5" />
     </selectedModels>
   </component>
   <component name="Git.Settings">
@@ -170,7 +202,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.32098.37" />
       </set>
     </attachedChunks>
   </component>

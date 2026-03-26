@@ -18,8 +18,6 @@ import com.wallet.wallet.repository.LedgerEntryRepository;
 import com.wallet.wallet.repository.WalletAccountRepository;
 import com.wallet.wallet.repository.WalletLimitConfigRepository;
 import feign.FeignException;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +45,7 @@ public class WalletService {
 
     public WalletService(WalletAccountRepository walletAccountRepository,
                          LedgerEntryRepository ledgerEntryRepository,
-                         @Qualifier("walletDomainEventPublisher") WalletEventPublisher eventPublisher,
+                         WalletEventPublisher eventPublisher,
                          UserClient userClient,
                          WalletLimitConfigRepository walletLimitConfigRepository,
                          NotificationClient notificationClient,
@@ -66,7 +64,6 @@ public class WalletService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = {"walletBalance", "walletHistory"}, allEntries = true)
     public WalletAccount topup(TopupRequest request) {
         validateTopupLimit(request.userId(), request.amount());
 
@@ -135,7 +132,6 @@ public class WalletService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = {"walletBalance", "walletHistory"}, allEntries = true)
     public String transfer(TransferRequest request) {
         validateTransferRequest(request);
         validateTransferLimits(request.fromUserId(), request.amount());
@@ -194,7 +190,6 @@ public class WalletService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = {"walletBalance", "walletHistory"}, allEntries = true)
     public WalletLimitConfig updateLimits(WalletLimitUpdateRequest request) {
         WalletLimitConfig config = getOrCreateLimitConfig();
 

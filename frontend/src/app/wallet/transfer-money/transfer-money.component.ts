@@ -55,13 +55,13 @@ export class TransferMoneyComponent {
     this.api.transfer(fromUserId, Number(toUserId), Number(amount))
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: (res) => {
+        next: (res: any) => {
           this.message = res.message || 'Transfer completed.';
           this.form.reset({ toUserId: null, amount: null });
           this.dataRefresh.refreshAll();
         },
-        error: (err) => {
-          this.error = err?.error?.message || 'Transfer failed.';
+        error: (err: any) => {
+          this.error = err.error?.message || 'Transfer failed.';
         }
       });
   }
