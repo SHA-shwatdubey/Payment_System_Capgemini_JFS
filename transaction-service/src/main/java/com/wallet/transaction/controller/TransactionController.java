@@ -79,7 +79,7 @@ public class TransactionController {
         byte[] body = transactionService.buildReceiptPdf(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=receipt-" + id + ".pdf")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentType(MediaType.APPLICATION_PDF)
                 .body(body);
     }
 
