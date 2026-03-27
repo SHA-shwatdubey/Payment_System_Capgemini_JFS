@@ -6,7 +6,6 @@ import com.wallet.transaction.dto.RefundRequest;
 import com.wallet.transaction.dto.TopupRequest;
 import com.wallet.transaction.dto.TransactionResponse;
 import com.wallet.transaction.dto.TransferRequest;
-import com.wallet.transaction.entity.EntryType;
 import com.wallet.transaction.entity.LedgerEntry;
 import com.wallet.transaction.entity.Transaction;
 import com.wallet.transaction.entity.TransactionStatus;
@@ -147,20 +146,16 @@ class TransactionServiceTest {
         LocalDateTime to = from.plusDays(1);
 
         when(userClient.getUserById(1L)).thenReturn(new Object());
-        when(ledgerEntryRepository.calculateBalanceBefore(1L, from)).thenReturn(new BigDecimal("100"));
 
-        LedgerEntry credit = new LedgerEntry();
-        credit.setCreatedAt(from.plusHours(1));
-        credit.setEntryType(EntryType.CREDIT);
-        credit.setAmount(new BigDecimal("30"));
+        Transaction t = new Transaction();
+        t.setId(101L);
+        t.setCreatedAt(from.plusHours(1));
+        t.setType(TransactionType.TRANSFER);
+        t.setAmount(new BigDecimal("50"));
+        t.setStatus(TransactionStatus.SUCCESS);
 
-        LedgerEntry debit = new LedgerEntry();
-        debit.setCreatedAt(from.plusHours(2));
-        debit.setEntryType(EntryType.DEBIT);
-        debit.setAmount(new BigDecimal("10"));
-
-        when(ledgerEntryRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtAsc(1L, from, to))
-                .thenReturn(List.of(credit, debit));
+        when(transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(1L, 1L, 1L))
+                .thenReturn(List.of(t));
 
         String csv = new String(transactionService.buildStatementCsv(1L, from, to));
 
