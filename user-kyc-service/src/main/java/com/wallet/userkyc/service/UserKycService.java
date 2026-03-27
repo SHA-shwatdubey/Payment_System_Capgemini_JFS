@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -167,10 +168,16 @@ public class UserKycService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found by ID: " + identifier));
         } catch (NumberFormatException e) {
             // Not a numeric ID, try Phone or UPI
-            return repository.findByPhone(identifier)
-                    .or(() -> repository.findByUpiId(identifier))
-                    .or(() -> repository.findByUpiId(identifier + "@nexpay"))
-                    .orElseThrow(() -> new IllegalArgumentException("User not found by Phone/UPI: " + identifier));
+            Optional<UserProfile> found = repository.findByPhone(identifier)
+                    .or(() -> repository.findByUpiId(identifier));
+            
+            if (found.isEmpty() && identifier.contains("@")) {
+                // If lookup failed and it's a UPI-like format, try the prefix as Phone
+                String phonePrefix = identifier.split("@")[0];
+                found = repository.findByPhone(phonePrefix);
+            }
+            
+            return found.orElseThrow(() -> new IllegalArgumentException("User not found by Phone/UPI: " + identifier));
         }
     }
 
