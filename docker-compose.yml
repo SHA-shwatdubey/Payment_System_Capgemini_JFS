@@ -203,8 +203,8 @@ services:
   # User KYC Service (BUILT LOCALLY)
   user-kyc-service:
     build:
-      context: ./user-kyc-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: user-kyc-service/Dockerfile
     image: local/user-kyc-service:latest
     container_name: user-kyc-service
     environment:
