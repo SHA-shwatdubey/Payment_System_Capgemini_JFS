@@ -145,7 +145,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml build
 
-      - name: Save Docker images to tar
+      - name: Save ONLY Project Microservices (local/*) to tar
         shell: bash
         run: |
           # Filter only the microservices built in this project (those starting with 'local/')
@@ -157,7 +157,7 @@ jobs:
             exit 1
           fi
           
-          echo "Exporting images: $images"
+          echo "CURRENTLY EXPORTING ONLY LOCAL PROJECT IMAGES: $images"
 
           missing=0
           for image in $images; do
