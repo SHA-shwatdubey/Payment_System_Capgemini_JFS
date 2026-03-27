@@ -59,6 +59,7 @@ class TransactionServiceTest {
         Transaction existing = new Transaction();
         existing.setId(11L);
         existing.setType(TransactionType.TOPUP);
+        existing.setUserId(10L);
         existing.setReceiverId(10L);
         existing.setAmount(new BigDecimal("100"));
         existing.setStatus(TransactionStatus.SUCCESS);
@@ -165,7 +166,6 @@ class TransactionServiceTest {
         assertThat(csv).contains("DEBIT,10,120");
     }
 }
-
 
 
 
