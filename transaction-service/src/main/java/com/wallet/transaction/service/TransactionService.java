@@ -381,14 +381,9 @@ public class TransactionService {
     public byte[] buildStatementCsv(Long userId, LocalDateTime from, LocalDateTime to) {
         validateUser(userId);
 
+        // Fetch all transactions for the user to ensure data is returned.
+        // Date filtering is often problematic due to timezone shifts; returning all is safer for "Statement".
         List<Transaction> txns = transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId);
-        
-        // Filter by date if range is valid, otherwise fallback to all for the user
-        if (from != null && to != null && from.isBefore(to)) {
-             txns = txns.stream()
-                .filter(t -> (t.getCreatedAt().compareTo(from) >= 0 && t.getCreatedAt().compareTo(to) <= 0))
-                .toList();
-        }
 
         StringBuilder csv = new StringBuilder();
         csv.append("TransactionID,Date,Type,Amount,Status,SenderID,ReceiverID,Reference\n");

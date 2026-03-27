@@ -79,7 +79,7 @@ public class TransactionController {
         byte[] body = transactionService.buildReceiptPdf(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=receipt-" + id + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(body);
     }
 
@@ -101,7 +101,7 @@ public class TransactionController {
         byte[] body = transactionService.buildStatementPdf(userId, from, to);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=statement-" + userId + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(body);
     }
 }
