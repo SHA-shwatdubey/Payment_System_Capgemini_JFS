@@ -1,4 +1,4 @@
-# CICD Test Trigger: Testing GitHub Actions Pipeline (verified pass)
+# CICD Test Trigger: Testing GitHub Actions Pipeline (verified pass, filtering deploy images)
 name: CI/CD Pipeline
 
 on:
@@ -148,7 +148,8 @@ jobs:
       - name: Save Docker images to tar
         shell: bash
         run: |
-          images=$(docker compose -f docker-compose.yml config --images)
+          # Only export images built locally (those with 'local/' prefix) and avoid external utility images
+          images=$(docker compose -f docker-compose.yml config --images | grep "local/")
           echo "Images to export:"
           echo "$images"
 
