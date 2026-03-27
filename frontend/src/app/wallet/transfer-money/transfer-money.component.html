@@ -13,7 +13,7 @@
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
           <!-- Recipient Input -->
           <div class="space-y-2">
-            <label class="text-sm font-semibold text-white">Recipient (Mobile / UPI ID / ID)</label>
+            <label class="text-sm font-semibold text-white">Recipient (Mobile Number / UPI ID / User ID)</label>
             <div class="relative group">
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <svg class="h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,7 +23,7 @@
               <input
                 type="text"
                 formControlName="recipient"
-                placeholder="Enter mobile or UPI ID"
+                placeholder="Enter mobile, UPI (e.g. 98xxx@nexpay) or ID"
                 class="w-full bg-[#0A0F18] border border-gray-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all" />
             </div>
           </div>
@@ -129,4 +129,3 @@
     </div>
   </div>
 </section>
-
