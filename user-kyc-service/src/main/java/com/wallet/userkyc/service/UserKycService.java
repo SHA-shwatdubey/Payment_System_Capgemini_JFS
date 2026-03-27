@@ -154,6 +154,26 @@ public class UserKycService {
         return getOrCreateUser(id);
     }
 
+    public UserProfile lookupUser(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            throw new IllegalArgumentException("Identifier is required");
+        }
+        
+        // Try as ID
+        try {
+            Long id = Long.valueOf(identifier);
+            return repository.findById(id)
+                    .or(() -> repository.findByAuthUserId(id))
+                    .orElseThrow(() -> new IllegalArgumentException("User not found by ID: " + identifier));
+        } catch (NumberFormatException e) {
+            // Not a numeric ID, try Phone or UPI
+            return repository.findByPhone(identifier)
+                    .or(() -> repository.findByUpiId(identifier))
+                    .or(() -> repository.findByUpiId(identifier + "@nexpay"))
+                    .orElseThrow(() -> new IllegalArgumentException("User not found by Phone/UPI: " + identifier));
+        }
+    }
+
 // Sirf pending users nikalna
     public List<UserProfile> pendingKyc() {
         return repository.findAll().stream().filter(u -> STATUS_PENDING.equals(u.getKycStatus())).toList();

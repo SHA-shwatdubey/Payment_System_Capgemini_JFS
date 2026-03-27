@@ -50,6 +50,11 @@ public class UserKycController {
         return service.getUser(id);
     }
 
+    @GetMapping("/api/users/lookup")
+    public UserProfile lookupUser(@RequestParam("q") String identifier) {
+        return service.lookupUser(identifier);
+    }
+
     @GetMapping("/api/support/users/{id}")
     public UserProfile supportGetUser(@PathVariable("id") @Positive(message = "id must be positive") Long id) {
         return service.getUser(id);

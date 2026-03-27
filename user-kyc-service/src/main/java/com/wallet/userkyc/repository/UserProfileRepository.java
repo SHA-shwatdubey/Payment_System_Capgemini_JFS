@@ -24,5 +24,7 @@ Long= Primary key ka type
 
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
 	Optional<UserProfile> findByAuthUserId(Long authUserId);
+	Optional<UserProfile> findByPhone(String phone);
+	Optional<UserProfile> findByUpiId(String upiId);
 }
 
