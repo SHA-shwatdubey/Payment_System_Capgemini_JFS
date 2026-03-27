@@ -42,8 +42,14 @@ public class WalletEventListener {
             log.info("Processing wallet event: eventType={}, userId={}, amount={}", 
                     event.eventType(), event.userId(), event.amount());
 
-            // Create transaction record based on event type
-            TransactionType transactionType = TransactionType.valueOf(event.eventType());
+            // Create transaction record based on event type (clean up suffixes like _DEBIT)
+            String rawType = event.eventType() != null ? event.eventType().replace("_DEBIT", "").replace("_CREDIT", "") : "TRANSFER";
+            TransactionType transactionType;
+            try {
+                transactionType = TransactionType.valueOf(rawType);
+            } catch (Exception e) {
+                transactionType = TransactionType.TRANSFER;
+            }
             
             Transaction transaction = new Transaction();
             transaction.setUserId(event.userId());
@@ -56,11 +62,8 @@ public class WalletEventListener {
             if (transactionType == TransactionType.TOPUP) {
                 transaction.setSenderId(SYSTEM_ACCOUNT_ID);
                 transaction.setReceiverId(event.userId());
-            } else if (transactionType == TransactionType.TRANSFER || 
-                       transactionType == TransactionType.PAYMENT || 
-                       transactionType == TransactionType.REFUND) {
-                // For transfer, payment, refund - we only get basic info from wallet event
-                // This is a limitation; ideally wallet service should publish more details
+            } else {
+                // For transfer, payment, refund
                 transaction.setSenderId(event.userId());
                 transaction.setReceiverId(event.userId());
             }

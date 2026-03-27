@@ -109,10 +109,10 @@ export class ApiService {
       map((entries: any[]) => (entries ?? []).map((e: any) => ({
         id: e.id || 0,
         userId: e.userId ?? userId,
-        senderId: e.entryType === 'DEBIT' ? userId : 0,
-        receiverId: e.entryType === 'CREDIT' ? userId : 0,
+        senderId: e.type?.includes('DEBIT') ? userId : 0,
+        receiverId: e.type?.includes('CREDIT') || e.type === 'TOPUP' ? userId : 0,
         amount: Math.abs(e.amount ?? 0),
-        type: e.entryType === 'CREDIT' ? 'TOPUP' : 'TRANSFER',
+        type: (e.type?.includes('TOPUP') || e.type?.includes('CREDIT')) ? 'TOPUP' : 'TRANSFER',
         status: 'SUCCESS',
         createdAt: e.createdAt || new Date().toISOString()
       } as TransactionItem)))
