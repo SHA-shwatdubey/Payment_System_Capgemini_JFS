@@ -25,6 +25,7 @@ management:
       show-details: always
     prometheus:
       enabled: true
+      access: unrestricted
   metrics:
     export:
       prometheus:

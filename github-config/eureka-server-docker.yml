@@ -1,6 +1,12 @@
 server:
   port: 8061
 
+spring:
+  jersey:
+    type: filter
+  main:
+    allow-bean-definition-overriding: true
+
 eureka:
   client:
     register-with-eureka: false
