@@ -50,11 +50,6 @@ public class UserKycController {
         return service.getUser(id);
     }
 
-    @GetMapping("/api/users/lookup")
-    public UserProfile lookupUser(@RequestParam("q") String identifier) {
-        return service.lookupUser(identifier);
-    }
-
     @GetMapping("/api/support/users/{id}")
     public UserProfile supportGetUser(@PathVariable("id") @Positive(message = "id must be positive") Long id) {
         return service.getUser(id);
@@ -63,8 +58,7 @@ public class UserKycController {
     @PostMapping("/api/kyc/submit/{userId}")
     public UserProfile submitKyc(
             @PathVariable("userId") @Positive(message = "userId must be positive") Long userId,
-            @RequestParam("documentId") String documentId
-    ) {
+            @RequestParam("documentId") String documentId) {
         return service.submitKyc(userId, documentId);
     }
 
@@ -74,8 +68,7 @@ public class UserKycController {
             @RequestParam("document") MultipartFile document,
             @RequestParam(value = "fullName", required = false) String fullName,
             @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "phone", required = false) String phone
-    ) {
+            @RequestParam(value = "phone", required = false) String phone) {
         return service.submitKycFile(userId, document, fullName, email, phone);
     }
 
@@ -83,8 +76,7 @@ public class UserKycController {
     public UserProfile updateStatus(
             @PathVariable("userId") @Positive(message = "userId must be positive") Long userId,
             @Valid @RequestBody KycStatusRequest request,
-            HttpServletRequest httpRequest
-    ) {
+            HttpServletRequest httpRequest) {
         ensureAdmin(httpRequest);
         return service.updateKycStatus(userId, request);
     }

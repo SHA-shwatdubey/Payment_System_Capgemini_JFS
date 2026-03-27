@@ -11,10 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 
 //Ye class business logic handle karegi
 @Service
@@ -29,31 +27,24 @@ public class UserKycService {
             "application/msword",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "image/jpeg",
-            "image/png"
-    );
+            "image/png");
 
-// Ye DB access object hai
+    // Ye DB access object hai
     private final UserProfileRepository repository;
     private final IntegrationClient integrationClient;
     private final NotificationClient notificationClient;
 
-
-
-
-
-// Spring automatically repository inject karega
+    // Spring automatically repository inject karega
 
     public UserKycService(UserProfileRepository repository,
-                          IntegrationClient integrationClient,
-                          NotificationClient notificationClient) {
+            IntegrationClient integrationClient,
+            NotificationClient notificationClient) {
         this.repository = repository;
         this.integrationClient = integrationClient;
         this.notificationClient = notificationClient;
     }
 
-
-
-// New user create karna
+    // New user create karna
     public UserProfile createUser(UserProfile user) {
         user.setKycStatus("NOT_SUBMITTED");
         UserProfile saved = repository.save(user);
@@ -64,8 +55,7 @@ public class UserKycService {
         return saved;
     }
 
-
-// User apna KYC submit kare
+    // User apna KYC submit kare
     public UserProfile submitKyc(Long userId, String documentId) {
         UserProfile user = getOrCreateUser(userId);
         user.setKycDocumentId(documentId);
@@ -83,11 +73,14 @@ public class UserKycService {
         user.setKycDocumentName(document.getOriginalFilename());
         user.setKycDocumentContentType(document.getContentType());
         user.setKycDocumentSize(document.getSize());
-        
-        if (fullName != null && !fullName.isBlank()) user.setFullName(fullName);
-        if (email != null && !email.isBlank()) user.setEmail(email);
-        if (phone != null && !phone.isBlank()) user.setPhone(phone);
-        
+
+        if (fullName != null && !fullName.isBlank())
+            user.setFullName(fullName);
+        if (email != null && !email.isBlank())
+            user.setEmail(email);
+        if (phone != null && !phone.isBlank())
+            user.setPhone(phone);
+
         try {
             user.setKycDocumentData(document.getBytes());
         } catch (IOException e) {
@@ -103,8 +96,7 @@ public class UserKycService {
         try {
             return integrationClient.verifyKyc(
                     IntegrationClient.INTERNAL_CALL_VALUE,
-                    new KycVerifyRequest(userId, documentRef)
-            ) == null ? "UNKNOWN" : "VERIFIED";
+                    new KycVerifyRequest(userId, documentRef)) == null ? "UNKNOWN" : "VERIFIED";
         } catch (Exception ignored) {
             return "FAILED";
         }
@@ -121,9 +113,7 @@ public class UserKycService {
         }
     }
 
-
-
-//    Admin KYC approve/reject kare
+    // Admin KYC approve/reject kare
     public UserProfile updateKycStatus(Long userId, KycStatusRequest request) {
         String normalizedStatus = request.status().trim().toUpperCase(Locale.ROOT);
 
@@ -145,43 +135,16 @@ public class UserKycService {
                 "KYC_STATUS_UPDATE",
                 "EMAIL",
                 saved.getEmail() == null ? ("user-" + notificationUserId) : saved.getEmail(),
-                "Your KYC status is now: " + saved.getKycStatus()
-        );
+                "Your KYC status is now: " + saved.getKycStatus());
         return saved;
     }
 
-// Single user fetch karna
+    // Single user fetch karna
     public UserProfile getUser(Long id) {
         return getOrCreateUser(id);
     }
 
-    public UserProfile lookupUser(String identifier) {
-        if (identifier == null || identifier.isBlank()) {
-            throw new IllegalArgumentException("Identifier is required");
-        }
-        
-        // Try as ID
-        try {
-            Long id = Long.valueOf(identifier);
-            return repository.findById(id)
-                    .or(() -> repository.findByAuthUserId(id))
-                    .orElseThrow(() -> new IllegalArgumentException("User not found by ID: " + identifier));
-        } catch (NumberFormatException e) {
-            // Not a numeric ID, try Phone or UPI
-            Optional<UserProfile> found = repository.findByPhone(identifier)
-                    .or(() -> repository.findByUpiId(identifier));
-            
-            if (found.isEmpty() && identifier.contains("@")) {
-                // If lookup failed and it's a UPI-like format, try the prefix as Phone
-                String phonePrefix = identifier.split("@")[0];
-                found = repository.findByPhone(phonePrefix);
-            }
-            
-            return found.orElseThrow(() -> new IllegalArgumentException("User not found by Phone/UPI: " + identifier));
-        }
-    }
-
-// Sirf pending users nikalna
+    // Sirf pending users nikalna
     public List<UserProfile> pendingKyc() {
         return repository.findAll().stream().filter(u -> STATUS_PENDING.equals(u.getKycStatus())).toList();
     }
@@ -200,4 +163,3 @@ public class UserKycService {
         return repository.save(user);
     }
 }
-

@@ -23,8 +23,6 @@ public class UserProfile {
     private String fullName;
     private String email;
     private String phone;
-    @Column(unique = true)
-    private String upiId;
     private String kycStatus;
     private String kycDocumentId;
     private String kycDocumentName;
@@ -36,13 +34,6 @@ public class UserProfile {
     @Lob
     @JsonIgnore
     private byte[] kycDocumentData;
-
-    @PrePersist
-    public void onCreate() {
-        if (upiId == null && phone != null) {
-            upiId = phone + "@nexpay";
-        }
-    }
 
     public Long getId() {
         return id;
@@ -82,14 +73,6 @@ public class UserProfile {
 
     public void setPhone(String phone) {
         this.phone = phone;
-    }
-
-    public String getUpiId() {
-        return upiId;
-    }
-
-    public void setUpiId(String upiId) {
-        this.upiId = upiId;
     }
 
     public String getKycStatus() {

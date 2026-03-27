@@ -21,7 +21,7 @@ export class TransferMoneyComponent {
   error = '';
 
   readonly form = this.fb.group({
-    recipient: ['', [Validators.required, Validators.minLength(1)]],
+    toUserId: [null as number | null, [Validators.required, Validators.min(1)]],
     amount: [null as number | null, [Validators.required, Validators.min(1)]]
   });
 
@@ -29,7 +29,7 @@ export class TransferMoneyComponent {
     private readonly api: ApiService,
     private readonly session: SessionService,
     private readonly dataRefresh: DataRefreshService
-  ) {}
+  ) { }
 
   setAmount(amount: number): void {
     this.form.patchValue({ amount });
@@ -51,28 +51,13 @@ export class TransferMoneyComponent {
     this.error = '';
     this.message = '';
 
-    const { recipient, amount } = this.form.getRawValue();
-    
-    // First lookup the user if it's not a numeric ID (or check if it's a mobile/upi)
-    this.api.lookupUser(recipient!).subscribe({
-        next: (user: any) => {
-            const toUserId = user.authUserId || user.id;
-            this.executeTransfer(fromUserId, toUserId, Number(amount));
-        },
-        error: (err: any) => {
-            this.loading = false;
-            this.error = 'Recipient not found. Please check phone/UPI/ID.';
-        }
-    });
-  }
-
-  private executeTransfer(fromUserId: number, toUserId: number, amount: number): void {
-    this.api.transfer(fromUserId, toUserId, amount)
+    const { toUserId, amount } = this.form.getRawValue();
+    this.api.transfer(fromUserId, Number(toUserId), Number(amount))
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (res: any) => {
           this.message = res.message || 'Transfer completed.';
-          this.form.reset({ recipient: '', amount: null });
+          this.form.reset({ toUserId: null, amount: null });
           this.dataRefresh.refreshAll();
         },
         error: (err: any) => {
@@ -81,3 +66,5 @@ export class TransferMoneyComponent {
       });
   }
 }
+
+

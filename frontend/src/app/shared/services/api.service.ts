@@ -147,10 +147,6 @@ export class ApiService {
     return this.http.get<UserProfile>(`${this.baseUrl}/api/users/${userId}`);
   }
 
-  lookupUser(query: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/api/users/lookup`, { params: { q: query } });
-  }
-
   submitKyc(userId: number, file: File, details?: { fullName?: string; email?: string; phone?: string }): Observable<UserProfile> {
     const formData = new FormData();
     formData.append('document', file);
