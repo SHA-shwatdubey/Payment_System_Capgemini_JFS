@@ -1,7 +1,21 @@
+# Base configuration for all microservices
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8061/eureka/
+  instance:
+    prefer-ip-address: true
+
+# Note: Individual services might override these
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
 
 springdoc:
   api-docs:
