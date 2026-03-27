@@ -1,4 +1,4 @@
-# CICD Test Trigger: Testing GitHub Actions Pipeline (verified pass, filtering deploy images)
+# CICD Trigger: Finalizing deployment filter (xargs added for clean image list)
 name: CI/CD Pipeline
 
 on:
@@ -148,10 +148,16 @@ jobs:
       - name: Save Docker images to tar
         shell: bash
         run: |
-          # Only export images built locally (those with 'local/' prefix) and avoid external utility images
-          images=$(docker compose -f docker-compose.yml config --images | grep "local/")
-          echo "Images to export:"
-          echo "$images"
+          # Filter only the microservices built in this project (those starting with 'local/')
+          # We avoid utility images like postgres/redis which can be pulled directly by EC2
+          images=$(docker compose -f docker-compose.yml config --images | grep "local/" | xargs)
+          
+          if [ -z "$images" ]; then
+            echo "Error: No 'local/' images were detected to export!"
+            exit 1
+          fi
+          
+          echo "Exporting images: $images"
 
           missing=0
           for image in $images; do
