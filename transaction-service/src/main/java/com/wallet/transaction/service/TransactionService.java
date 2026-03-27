@@ -380,6 +380,10 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public byte[] buildStatementCsv(Long userId, LocalDateTime from, LocalDateTime to) {
         validateUser(userId);
+        
+        if (from.plusDays(90).isBefore(to)) {
+            throw new IllegalArgumentException("Date range cannot exceed 90 days");
+        }
 
         // Fetch all transactions for the user to ensure data is returned.
         // Date filtering is often problematic due to timezone shifts; returning all is safer for "Statement".

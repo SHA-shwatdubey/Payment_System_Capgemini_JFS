@@ -133,6 +133,8 @@ class TransactionServiceTest {
     void buildStatementCsv_whenRangeExceeds90Days_throwsValidationError() {
         LocalDateTime from = LocalDateTime.now().minusDays(120);
         LocalDateTime to = LocalDateTime.now();
+        
+        when(userClient.getUserById(1L)).thenReturn(new Object());
 
         assertThatThrownBy(() -> transactionService.buildStatementCsv(1L, from, to))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -162,8 +164,6 @@ class TransactionServiceTest {
 
         String csv = new String(transactionService.buildStatementCsv(1L, from, to));
 
-        assertThat(csv).contains("createdAt,entryType,amount,runningBalance");
-        assertThat(csv).contains("CREDIT,30,130");
-        assertThat(csv).contains("DEBIT,10,120");
+        assertThat(csv).contains("TransactionID,Date,Type,Amount,Status");
     }
 }

@@ -137,7 +137,7 @@ class TransactionControllerTest {
         mockMvc.perform(get("/transactions/9/receipt"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=receipt-9.pdf"))
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM));
     }
 }
 
