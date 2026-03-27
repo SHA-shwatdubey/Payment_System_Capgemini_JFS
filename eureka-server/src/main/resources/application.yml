@@ -2,6 +2,26 @@ spring:
   application:
     name: eureka-server
   config:
-    import: ${SPRING_CONFIG_IMPORT:configserver:http://localhost:8060}
+    import: ${SPRING_CONFIG_IMPORT:optional:configserver:http://localhost:8060}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+      access: unrestricted
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 
