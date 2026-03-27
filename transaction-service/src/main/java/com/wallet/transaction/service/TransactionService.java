@@ -379,17 +379,19 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public byte[] buildStatementCsv(Long userId, LocalDateTime from, LocalDateTime to) {
-        validateStatementWindow(from, to);
         validateUser(userId);
 
-        List<Transaction> txns = transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId)
-                .stream()
-                .filter(t -> (t.getCreatedAt().isAfter(from) || t.getCreatedAt().isEqual(from)) && 
-                             (t.getCreatedAt().isBefore(to) || t.getCreatedAt().isEqual(to)))
+        List<Transaction> txns = transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId);
+        
+        // Filter by date if range is valid, otherwise fallback to all for the user
+        if (from != null && to != null && from.isBefore(to)) {
+             txns = txns.stream()
+                .filter(t -> (t.getCreatedAt().compareTo(from) >= 0 && t.getCreatedAt().compareTo(to) <= 0))
                 .toList();
+        }
 
         StringBuilder csv = new StringBuilder();
-        csv.append("TransactionID,Date,Type,Amount,Status,Sender,Receiver,IdempotencyKey\n");
+        csv.append("TransactionID,Date,Type,Amount,Status,SenderID,ReceiverID,Reference\n");
         for (Transaction t : txns) {
             csv.append(t.getId()).append(",")
                .append(t.getCreatedAt()).append(",")
