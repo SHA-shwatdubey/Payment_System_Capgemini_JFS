@@ -5,12 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="77c77317-8c51-480a-bce2-d9b1899e8a8e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/grafana/dashboard-provider.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eureka-server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/github-config/config-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/config-server.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/github-config/eureka-server-docker.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/eureka-server-docker.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/github-config/eureka-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/github-config/eureka-server.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/admin-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker/init/01-create-databases.sql" beforeDir="false" afterPath="$PROJECT_DIR$/docker/init/01-create-databases.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eureka-server/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/integration-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/integration-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/integration-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/integration-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rewards-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/rewards-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rewards-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/rewards-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/java/com/wallet/transaction/service/TransactionServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/java/com/wallet/transaction/service/TransactionServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/resources/logback-test.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/resources/logback-test.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/wallet-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/test/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,21 +45,24 @@
     </persistenceIdMap>
   </component>
   <component name="CopilotUserSelectedChatMode">
-    <option name="chatModeId" value="Agent" />
+    <option name="chatModeId" value="Ask" />
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
-      <entry key="chat-panel" value="Claude Haiku 4.5" />
-      <entry key="agent-panel" value="Claude Haiku 4.5" />
+      <entry key="chat-panel" value="Auto" />
+      <entry key="agent-panel" value="Auto" />
     </selectedModels>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="39702" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
-  <component name="KubernetesApiProvider"><![CDATA[{
-  "isMigrated": true
-}]]></component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -55,84 +78,84 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "JUnit.All in admin-service (1).executor": "Run",
-    "JUnit.All in admin-service.executor": "Run",
-    "JUnit.All in api-gateway (1).executor": "Run",
-    "JUnit.All in api-gateway.executor": "Run",
-    "JUnit.All in auth-service (1).executor": "Run",
-    "JUnit.All in auth-service.executor": "Run",
-    "JUnit.All in config-server.executor": "Run",
-    "JUnit.All in eureka-server.executor": "Run",
-    "JUnit.All in integration-service.executor": "Run",
-    "JUnit.All in notification-service.executor": "Run",
-    "JUnit.All in rewards-service.executor": "Run",
-    "JUnit.All in transaction-service.executor": "Run",
-    "JUnit.All in user-kyc-service.executor": "Run",
-    "JUnit.All in wallet-service.executor": "Run",
-    "KUBERNETES_SUPPRESS_CONFIG_CLUSTER_SUGGESTION": "true",
-    "Maven.Digital_Wallet_amp_Rewards_Loyalty_System [clean...].executor": "Run",
-    "Maven.user-kyc-service [test].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.AdminServiceApplication.executor": "Run",
-    "Spring Boot.ApiGatewayApplication.executor": "Run",
-    "Spring Boot.AuthServiceApplication.executor": "Run",
-    "Spring Boot.ConfigServerApplication.executor": "Run",
-    "Spring Boot.EurekaServerApplication.executor": "Run",
-    "Spring Boot.RewardsServiceApplication.executor": "Run",
-    "Spring Boot.TransactionServiceApplication.executor": "Run",
-    "Spring Boot.UserKycServiceApplication.executor": "Run",
-    "Spring Boot.WalletServiceApplication.executor": "Run",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/Shashwat/OneDrive/Desktop/JAVA_FULL_STACK_CAPGEMINI_PAYMENT_AND_REWARD_SYSTEM/BACKEND_Payment_System_Capgemini",
-    "onboarding.tips.debug.path": "C:/Users/Shashwat/OneDrive/Desktop/SpringCloud/Digital_Wallet_amp_Rewards_Loyalty_System/src/main/java/pom/capgemini/Main.java",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "reference.settings.project.maven.testRunning"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JUnit.All in admin-service (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in admin-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in api-gateway (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in api-gateway.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in auth-service (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in auth-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in config-server.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in eureka-server.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in integration-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in notification-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in rewards-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in transaction-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in user-kyc-service.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in wallet-service.executor&quot;: &quot;Run&quot;,
+    &quot;KUBERNETES_SUPPRESS_CONFIG_CLUSTER_SUGGESTION&quot;: &quot;true&quot;,
+    &quot;Maven.Digital_Wallet_amp_Rewards_Loyalty_System [clean...].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.user-kyc-service [test].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.AdminServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.AuthServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ConfigServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.EurekaServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.RewardsServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.TransactionServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.UserKycServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.WalletServiceApplication.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Shashwat/OneDrive/Desktop/JAVA_FULL_STACK_CAPGEMINI_PAYMENT_AND_REWARD_SYSTEM/BACKEND_Payment_System_Capgemini&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;C:/Users/Shashwat/OneDrive/Desktop/SpringCloud/Digital_Wallet_amp_Rewards_Loyalty_System/src/main/java/pom/capgemini/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.49655172&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
-  <component name="RunManager" selected="JUnit.All in notification-service">
+}</component>
+  <component name="RunManager" selected="JUnit.All in admin-service">
+    <configuration name="All in admin-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="admin-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in auth-service (1)" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="auth-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in config-server" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="config-server" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="All in integration-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="integration-service" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TEST_OBJECT" value="package" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="All in notification-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="notification-service" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="All in rewards-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="rewards-service" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="All in transaction-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="transaction-service" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="All in user-kyc-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="user-kyc-service" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="All in wallet-service" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="wallet-service" />
       <option name="PACKAGE_NAME" value="" />
       <option name="TEST_OBJECT" value="package" />
       <method v="2">
@@ -152,11 +175,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.All in wallet-service" />
-        <item itemvalue="JUnit.All in user-kyc-service" />
-        <item itemvalue="JUnit.All in transaction-service" />
-        <item itemvalue="JUnit.All in rewards-service" />
+        <item itemvalue="JUnit.All in admin-service" />
         <item itemvalue="JUnit.All in notification-service" />
+        <item itemvalue="JUnit.All in integration-service" />
+        <item itemvalue="JUnit.All in config-server" />
+        <item itemvalue="JUnit.All in auth-service (1)" />
       </list>
     </recent_temporary>
   </component>

@@ -33,5 +33,3 @@ class HomeControllerTest {
         assertThat(json).contains("/v3/api-docs");
     }
 }
-
-
