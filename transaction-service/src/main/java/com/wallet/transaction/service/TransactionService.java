@@ -355,19 +355,26 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public byte[] buildReceiptPdf(Long transactionId) {
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+        Transaction t = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + transactionId));
 
-        String content = "Receipt\n"
-                + "Transaction ID: " + transaction.getId() + "\n"
-                + "User ID: " + transaction.getUserId() + "\n"
-                + "Sender ID: " + transaction.getSenderId() + "\n"
-                + "Receiver ID: " + transaction.getReceiverId() + "\n"
-                + "Amount: " + transaction.getAmount() + "\n"
-                + "Type: " + transaction.getType() + "\n"
-                + "Status: " + transaction.getStatus() + "\n"
-                + "Date: " + transaction.getCreatedAt() + "\n";
-        return content.getBytes(StandardCharsets.UTF_8);
+        StringBuilder sb = new StringBuilder();
+        sb.append("------------------------------------------\n");
+        sb.append("           NEXPAY TRANSACTION RECEIPT     \n");
+        sb.append("------------------------------------------\n");
+        sb.append("Transaction ID : ").append(t.getId()).append("\n");
+        sb.append("External Ref   : ").append(t.getIdempotencyKey()).append("\n");
+        sb.append("Date & Time    : ").append(t.getCreatedAt()).append("\n");
+        sb.append("Type           : ").append(t.getType()).append("\n");
+        sb.append("Status         : ").append(t.getStatus()).append("\n");
+        sb.append("Amount         : INR ").append(t.getAmount()).append("\n");
+        sb.append("------------------------------------------\n");
+        sb.append("From Account   : ").append(t.getSenderId()).append("\n");
+        sb.append("To Account     : ").append(t.getReceiverId()).append("\n");
+        sb.append("------------------------------------------\n");
+        sb.append("Thank you for using NexPay!\n");
+
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     @Transactional(readOnly = true)
@@ -375,21 +382,24 @@ public class TransactionService {
         validateStatementWindow(from, to);
         validateUser(userId);
 
-        BigDecimal running = ledgerEntryRepository.calculateBalanceBefore(userId, from);
-        List<LedgerEntry> entries = ledgerEntryRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtAsc(userId, from, to);
+        List<Transaction> txns = transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId)
+                .stream()
+                .filter(t -> (t.getCreatedAt().isAfter(from) || t.getCreatedAt().isEqual(from)) && 
+                             (t.getCreatedAt().isBefore(to) || t.getCreatedAt().isEqual(to)))
+                .toList();
 
         StringBuilder csv = new StringBuilder();
-        csv.append("createdAt,entryType,amount,runningBalance\n");
-        for (LedgerEntry entry : entries) {
-            BigDecimal delta = entry.getEntryType() == EntryType.CREDIT
-                    ? entry.getAmount()
-                    : entry.getAmount().negate();
-            running = running.add(delta);
-            csv.append(entry.getCreatedAt()).append(",")
-                    .append(entry.getEntryType()).append(",")
-                    .append(entry.getAmount()).append(",")
-                    .append(running)
-                    .append("\n");
+        csv.append("TransactionID,Date,Type,Amount,Status,Sender,Receiver,IdempotencyKey\n");
+        for (Transaction t : txns) {
+            csv.append(t.getId()).append(",")
+               .append(t.getCreatedAt()).append(",")
+               .append(t.getType()).append(",")
+               .append(t.getAmount()).append(",")
+               .append(t.getStatus()).append(",")
+               .append(t.getSenderId()).append(",")
+               .append(t.getReceiverId()).append(",")
+               .append(t.getIdempotencyKey())
+               .append("\n");
         }
 
         return csv.toString().getBytes(StandardCharsets.UTF_8);
@@ -400,31 +410,33 @@ public class TransactionService {
         validateStatementWindow(from, to);
         validateUser(userId);
 
-        BigDecimal running = ledgerEntryRepository.calculateBalanceBefore(userId, from);
-        List<LedgerEntry> entries = ledgerEntryRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtAsc(userId, from, to);
+        List<Transaction> txns = transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(userId, userId, userId)
+                .stream()
+                .filter(t -> (t.getCreatedAt().isAfter(from) || t.getCreatedAt().isEqual(from)) && 
+                             (t.getCreatedAt().isBefore(to) || t.getCreatedAt().isEqual(to)))
+                .toList();
 
-        StringBuilder content = new StringBuilder();
-        content.append("Statement\n")
-                .append("User ID: ").append(userId).append("\n")
-                .append("From: ").append(from).append("\n")
-                .append("To: ").append(to).append("\n\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("========================================================================\n");
+        sb.append("                        NEXPAY ACCOUNT STATEMENT                        \n");
+        sb.append("========================================================================\n");
+        sb.append("User ID: ").append(userId).append("\n");
+        sb.append("Period : ").append(from).append(" to ").append(to).append("\n");
+        sb.append("------------------------------------------------------------------------\n");
+        sb.append(String.format("%-8s | %-19s | %-10s | %-10s | %-8s\n", "ID", "Date", "Type", "Amount", "Status"));
+        sb.append("------------------------------------------------------------------------\n");
 
-        for (LedgerEntry entry : entries) {
-            BigDecimal delta = entry.getEntryType() == EntryType.CREDIT
-                    ? entry.getAmount()
-                    : entry.getAmount().negate();
-            running = running.add(delta);
-            content.append(entry.getCreatedAt())
-                    .append(" | ")
-                    .append(entry.getEntryType())
-                    .append(" | amount=")
-                    .append(entry.getAmount())
-                    .append(" | running=")
-                    .append(running)
-                    .append("\n");
+        for (Transaction t : txns) {
+            sb.append(String.format("%-8d | %-19s | %-10s | %-10s | %-8s\n",
+                    t.getId(),
+                    t.getCreatedAt().toString().replace("T", " ").substring(0, 19),
+                    t.getType(),
+                    t.getAmount(),
+                    t.getStatus()));
         }
+        sb.append("========================================================================\n");
 
-        return content.toString().getBytes(StandardCharsets.UTF_8);
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private void validateStatementWindow(LocalDateTime from, LocalDateTime to) {
