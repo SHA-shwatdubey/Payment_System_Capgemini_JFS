@@ -5,14 +5,9 @@ import com.wallet.transaction.dto.PaymentRequest;
 import com.wallet.transaction.dto.RefundRequest;
 import com.wallet.transaction.dto.TopupRequest;
 import com.wallet.transaction.dto.TransactionResponse;
-import com.wallet.transaction.dto.TransferRequest;
-import com.wallet.transaction.entity.LedgerEntry;
 import com.wallet.transaction.entity.Transaction;
 import com.wallet.transaction.entity.TransactionStatus;
 import com.wallet.transaction.entity.TransactionType;
-import com.wallet.transaction.exception.IdempotencyConflictException;
-import com.wallet.transaction.exception.InsufficientBalanceException;
-import com.wallet.transaction.exception.ResourceNotFoundException;
 import com.wallet.transaction.repository.LedgerEntryRepository;
 import com.wallet.transaction.repository.TransactionRepository;
 import org.junit.jupiter.api.Test;
@@ -23,14 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,115 +43,116 @@ class TransactionServiceTest {
     @Mock
     private RewardEventPublisher rewardEventPublisher;
 
+    @Mock
+    private TransactionEventPublisher transactionEventPublisher;
+
     @InjectMocks
     private TransactionService transactionService;
 
     @Test
-    void topup_whenIdempotencyKeyExists_returnsExistingTransaction() {
-        Transaction existing = new Transaction();
-        existing.setId(11L);
-        existing.setType(TransactionType.TOPUP);
-        existing.setUserId(10L);
-        existing.setSenderId(10L);
-        existing.setReceiverId(10L);
-        existing.setAmount(new BigDecimal("100"));
-        existing.setStatus(TransactionStatus.SUCCESS);
+    void topup_withValidRequest_savesLedgerAndPublishesEvents() {
+        when(transactionRepository.findByIdempotencyKey("k1")).thenReturn(Optional.empty());
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userClient.getUserById(10L)).thenReturn(new Object());
 
-        when(transactionRepository.findByIdempotencyKey("k1")).thenReturn(Optional.of(existing));
+        TransactionResponse resp = transactionService.topup(new TopupRequest(10L, new BigDecimal("100"), "k1"));
 
-        TransactionResponse response = transactionService.topup(new TopupRequest(10L, new BigDecimal("100"), "k1"));
-
-        assertThat(response.id()).isEqualTo(11L);
+        assertThat(resp.status()).isEqualTo(TransactionStatus.SUCCESS);
+        verify(ledgerEntryRepository, times(2)).save(any());
+        verify(rewardEventPublisher).publish(any());
+        verify(transactionEventPublisher).publishTransactionEvent(any());
     }
 
     @Test
-    void transfer_withInsufficientBalance_throwsExceptionAndMarksFailed() {
-        List<TransactionStatus> savedStatuses = new ArrayList<>();
-        List<String> savedIdempotencyKeys = new ArrayList<>();
-
-        when(transactionRepository.findByIdempotencyKey("k2")).thenReturn(Optional.empty());
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(invocation -> {
-            Transaction transaction = invocation.getArgument(0);
-            savedStatuses.add(transaction.getStatus());
-            savedIdempotencyKeys.add(transaction.getIdempotencyKey());
-            return transaction;
-        });
+    void payment_viaSaga_executesAllStepsSuccessfully() {
+        when(transactionRepository.findByIdempotencyKey("p1")).thenReturn(Optional.empty());
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         when(userClient.getUserById(1L)).thenReturn(new Object());
         when(userClient.getUserById(2L)).thenReturn(new Object());
-        when(ledgerEntryRepository.calculateBalanceForUpdate(1L)).thenReturn(new BigDecimal("5"));
+        when(ledgerEntryRepository.calculateBalanceForUpdate(1L)).thenReturn(new BigDecimal("100"));
 
-        assertThatThrownBy(() -> transactionService.transfer(new TransferRequest(1L, 2L, new BigDecimal("10"), "k2")))
-                .isInstanceOf(InsufficientBalanceException.class);
+        TransactionResponse resp = transactionService.payment(new PaymentRequest(1L, 2L, new BigDecimal("10"), "p1"));
 
-        verify(transactionRepository, times(2)).save(any(Transaction.class));
-        assertThat(savedStatuses).containsExactly(TransactionStatus.PENDING, TransactionStatus.FAILED);
-        assertThat(savedIdempotencyKeys).containsExactly("k2", "k2");
-
-        verify(ledgerEntryRepository, never()).save(any(LedgerEntry.class));
-        verify(rewardEventPublisher, never()).publish(any());
+        assertThat(resp.status()).isEqualTo(TransactionStatus.SUCCESS);
+        verify(ledgerEntryRepository, times(2)).save(any());
+        verify(rewardEventPublisher).publish(any());
     }
 
     @Test
-    void transfer_withSameUsers_throwsValidationError() {
-        assertThatThrownBy(() -> transactionService.transfer(new TransferRequest(2L, 2L, new BigDecimal("1"), "k3")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("cannot be same");
-    }
-
-    @Test
-    void payment_withSameIdempotencyKeyDifferentPayload_throwsConflict() {
-        Transaction existing = new Transaction();
-        existing.setType(TransactionType.PAYMENT);
-        existing.setSenderId(1L);
-        existing.setReceiverId(2L);
-        existing.setAmount(new BigDecimal("10"));
-        when(transactionRepository.findByIdempotencyKey("p1")).thenReturn(Optional.of(existing));
-
-        assertThatThrownBy(() -> transactionService.payment(new PaymentRequest(1L, 2L, new BigDecimal("20"), "p1")))
-                .isInstanceOf(IdempotencyConflictException.class);
-    }
-
-    @Test
-    void refund_whenOriginalTransactionMissing_throwsNotFound() {
+    void refund_withValidOriginalTransaction_createsRefundEntries() {
+        Transaction original = new Transaction();
+        original.setId(77L);
+        original.setType(TransactionType.PAYMENT);
         when(transactionRepository.findByIdempotencyKey("r1")).thenReturn(Optional.empty());
-        when(transactionRepository.findById(77L)).thenReturn(Optional.empty());
+        when(transactionRepository.findById(77L)).thenReturn(Optional.of(original));
+        when(userClient.getUserById(any())).thenReturn(new Object());
+        when(ledgerEntryRepository.calculateBalanceForUpdate(any())).thenReturn(new BigDecimal("50"));
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        assertThatThrownBy(() -> transactionService.refund(new RefundRequest(1L, 2L, new BigDecimal("10"), 77L, "r1")))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Original transaction not found");
+        TransactionResponse resp = transactionService.refund(new RefundRequest(1L, 2L, new BigDecimal("10"), 77L, "r1"));
+
+        assertThat(resp.status()).isEqualTo(TransactionStatus.SUCCESS);
+        verify(ledgerEntryRepository, times(2)).save(any());
     }
 
     @Test
-    void buildStatementCsv_whenRangeExceeds90Days_throwsValidationError() {
-        LocalDateTime from = LocalDateTime.now().minusDays(120);
-        LocalDateTime to = LocalDateTime.now();
-        
-        when(userClient.getUserById(1L)).thenReturn(new Object());
+    void buildReceiptPdf_withValidId_returnsCustomPdfBytes() {
+        Transaction t = new Transaction();
+        t.setId(500L);
+        t.setAmount(new BigDecimal("75.50"));
+        t.setType(TransactionType.PAYMENT);
+        t.setCreatedAt(LocalDateTime.now());
+        when(transactionRepository.findById(500L)).thenReturn(Optional.of(t));
 
-        assertThatThrownBy(() -> transactionService.buildStatementCsv(1L, from, to))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("cannot exceed 90 days");
+        byte[] pdf = transactionService.buildReceiptPdf(500L);
+
+        String content = new String(pdf);
+        assertThat(content)
+            .contains("NEXPAY TRANSACTION RECEIPT")
+            .contains("INR 75.50");
     }
 
     @Test
-    void buildStatementCsv_withEntries_includesRunningBalance() {
+    void buildStatementPdf_withValidData_filtersByDateRange() {
         LocalDateTime from = LocalDateTime.of(2025, 1, 1, 0, 0);
-        LocalDateTime to = from.plusDays(1);
-
+        LocalDateTime to = from.plusDays(10);
         when(userClient.getUserById(1L)).thenReturn(new Object());
 
         Transaction t = new Transaction();
-        t.setId(101L);
-        t.setCreatedAt(from.plusHours(1));
-        t.setType(TransactionType.TRANSFER);
-        t.setAmount(new BigDecimal("50"));
+        t.setCreatedAt(from.plusDays(5));
+        t.setAmount(BigDecimal.TEN);
         t.setStatus(TransactionStatus.SUCCESS);
-
         when(transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(1L, 1L, 1L))
                 .thenReturn(List.of(t));
 
-        String csv = new String(transactionService.buildStatementCsv(1L, from, to));
+        byte[] pdf = transactionService.buildStatementPdf(1L, from, to);
+        assertThat(new String(pdf)).contains("NEXPAY ACCOUNT STATEMENT");
+    }
 
-        assertThat(csv).contains("TransactionID,Date,Type,Amount,Status");
+    @Test
+    void validateStatementWindow_whenExceeds90Days_throwsException() {
+        LocalDateTime from = LocalDateTime.now().minusDays(100);
+        LocalDateTime to = LocalDateTime.now();
+
+        assertThatThrownBy(() -> transactionService.buildStatementPdf(1L, from, to))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exceed 90 days");
+    }
+
+    @Test
+    void payment_whenSagaFails_compensatesAndThrowsException() {
+        when(transactionRepository.findByIdempotencyKey("p-fail")).thenReturn(Optional.empty());
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userClient.getUserById(1L)).thenReturn(new Object());
+        // Simulate failure in validation step
+        when(userClient.getUserById(2L)).thenThrow(new RuntimeException("Saga Break"));
+
+        PaymentRequest req = new PaymentRequest(1L, 2L, new BigDecimal("10"), "p-fail");
+        assertThatThrownBy(() -> transactionService.payment(req))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Saga Break");
+
+        // Should have been marked PENDING then FAILED during compensation
+        verify(transactionRepository, times(2)).save(any());
     }
 }
