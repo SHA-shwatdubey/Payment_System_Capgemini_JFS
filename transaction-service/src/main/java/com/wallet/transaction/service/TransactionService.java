@@ -30,6 +30,9 @@ import java.time.LocalDateTime;
 import com.wallet.transaction.dto.TransactionHistoryEvent;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import com.wallet.transaction.saga.PaymentSagaContext;
+import com.wallet.transaction.saga.SagaOrchestrator;
+import com.wallet.transaction.saga.SagaStep;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,7 +80,11 @@ public class TransactionService {
             validateUser(request.userId());
             saveLedgerPair(transaction, SYSTEM_ACCOUNT_ID, request.userId(), request.amount());
             markSuccess(transaction);
-            publishRewardEvent(request.userId(), transaction.getType(), request.amount());
+            try {
+                publishRewardEvent(request.userId(), transaction.getType(), request.amount());
+            } catch (Exception e) {
+                log.error("Failed to publish reward event for topup: {}", e.getMessage());
+            }
             publishTransactionHistoryEvent(transaction);
             log.info("Topup successful transactionId={} userId={} amount={}", transaction.getId(), request.userId(), request.amount());
             return TransactionResponse.from(transaction);
@@ -114,7 +121,11 @@ public class TransactionService {
             ensureSufficientBalance(request.senderId(), request.amount());
             saveLedgerPair(transaction, request.senderId(), request.receiverId(), request.amount());
             markSuccess(transaction);
-            publishRewardEvent(request.senderId(), transaction.getType(), request.amount());
+            try {
+                publishRewardEvent(request.senderId(), transaction.getType(), request.amount());
+            } catch (Exception e) {
+                log.error("Failed to publish reward event for transfer: {}", e.getMessage());
+            }
             publishTransactionHistoryEvent(transaction);
             log.info("Transfer successful transactionId={} senderId={} receiverId={} amount={}",
                     transaction.getId(), request.senderId(), request.receiverId(), request.amount());
@@ -138,29 +149,85 @@ public class TransactionService {
             return TransactionResponse.from(existing.get());
         }
 
-        Transaction transaction = createPendingTransaction(
-                request.senderId(),
-                request.receiverId(),
-                request.amount(),
-                TransactionType.PAYMENT,
-                request.idempotencyKey()
-        );
+        // --- Saga Implementation Starts ---
+        log.info("Initiating Payment Saga for payment from sender={} to receiver={} amount={}",
+                request.senderId(), request.receiverId(), request.amount());
+
+        PaymentSagaContext context = new PaymentSagaContext(request.senderId(), request.receiverId(), request.amount());
+        SagaOrchestrator<PaymentSagaContext> orchestrator = new SagaOrchestrator<>(context);
+
+        // Step 1: Create Transaction Entity (State: PENDING)
+        orchestrator.addStep(new SagaStep<>() {
+            @Override public String getName() { return "CreateTransaction"; }
+            @Override public void execute(PaymentSagaContext ctx) {
+                Transaction transaction = createPendingTransaction(
+                        ctx.getSenderId(),
+                        ctx.getReceiverId(),
+                        ctx.getAmount(),
+                        TransactionType.PAYMENT,
+                        request.idempotencyKey()
+                );
+                ctx.setTransaction(transaction);
+            }
+            @Override public void compensate(PaymentSagaContext ctx) {
+                if (ctx.getTransaction() != null) {
+                    markFailed(ctx.getTransaction());
+                    log.warn("Saga Compensate: Marked transaction {} as FAILED", ctx.getTransaction().getId());
+                }
+            }
+        });
+
+        // Step 2: Validate Users and Balance
+        orchestrator.addStep(new SagaStep<>() {
+            @Override public String getName() { return "ValidateAndReserve"; }
+            @Override public void execute(PaymentSagaContext ctx) {
+                validateUser(ctx.getSenderId());
+                validateUser(ctx.getReceiverId());
+                ensureSufficientBalance(ctx.getSenderId(), ctx.getAmount());
+            }
+            @Override public void compensate(PaymentSagaContext ctx) {
+                // Read-only step, no compensation needed
+            }
+        });
+
+        // Step 3: Ledger Accounting (Deduct/Credit)
+        orchestrator.addStep(new SagaStep<>() {
+            @Override public String getName() { return "AccountingEntries"; }
+            @Override public void execute(PaymentSagaContext ctx) {
+                saveLedgerPair(ctx.getTransaction(), ctx.getSenderId(), ctx.getReceiverId(), ctx.getAmount());
+                markSuccess(ctx.getTransaction());
+            }
+            @Override public void compensate(PaymentSagaContext ctx) {
+                // Compensation: Create reverse ledger entries if needed or just mark transaction failed
+                // Since this is a simple demo, marking transaction FAILED in Step 1 compensation is often enough,
+                // but in a true distributed saga, we'd send a 'Refund' command here.
+                log.warn("Saga Compensate: Ledger entries would be reversed here for transaction {}", ctx.getTransaction().getId());
+            }
+        });
+
+        // Step 4: External Reward Publishing (Cross-Service context)
+        orchestrator.addStep(new SagaStep<>() {
+            @Override public String getName() { return "PublishRewardEvent"; }
+            @Override public void execute(PaymentSagaContext ctx) {
+                // We simulate this being an essential part of the Saga
+                publishRewardEvent(ctx.getSenderId(), ctx.getTransaction().getType(), ctx.getAmount());
+                publishTransactionHistoryEvent(ctx.getTransaction());
+            }
+            @Override public void compensate(PaymentSagaContext ctx) {
+                log.warn("Saga Compensate: Rewards rollback (if any) for transaction {}", ctx.getTransaction().getId());
+            }
+        });
 
         try {
-            validateUser(request.senderId());
-            validateUser(request.receiverId());
-            ensureSufficientBalance(request.senderId(), request.amount());
-            saveLedgerPair(transaction, request.senderId(), request.receiverId(), request.amount());
-            markSuccess(transaction);
-            publishRewardEvent(request.senderId(), transaction.getType(), request.amount());
-            publishTransactionHistoryEvent(transaction);
-            log.info("Payment successful transactionId={} senderId={} receiverId={} amount={}",
-                    transaction.getId(), request.senderId(), request.receiverId(), request.amount());
-            return TransactionResponse.from(transaction);
-        } catch (RuntimeException ex) {
-            markFailed(transaction);
+            orchestrator.execute();
+            log.info("Payment completed successfully via Saga: transactionId={}", context.getTransaction().getId());
+            return TransactionResponse.from(context.getTransaction());
+        } catch (Exception ex) {
+            log.error("Payment failed in Saga: {}", ex.getMessage());
+            // Orchestrator already called compensate()
             throw ex;
         }
+        // --- Saga Implementation Ends ---
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
