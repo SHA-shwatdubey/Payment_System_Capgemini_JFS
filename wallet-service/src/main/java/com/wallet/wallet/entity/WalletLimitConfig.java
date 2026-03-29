@@ -23,6 +23,15 @@ public class WalletLimitConfig {
     @Column(nullable = false)
     private Integer dailyTransferCountLimit;
 
+    public WalletLimitConfig() {}
+
+    public WalletLimitConfig(Long id, BigDecimal dailyTopupLimit, BigDecimal dailyTransferLimit, Integer dailyTransferCountLimit) {
+        this.id = id;
+        this.dailyTopupLimit = dailyTopupLimit;
+        this.dailyTransferLimit = dailyTransferLimit;
+        this.dailyTransferCountLimit = dailyTransferCountLimit;
+    }
+
     public Long getId() {
         return id;
     }

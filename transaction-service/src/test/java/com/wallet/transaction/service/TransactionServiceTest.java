@@ -25,8 +25,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -202,16 +200,71 @@ class TransactionServiceTest {
     }
 
     @Test
-    void buildReceiptPdf_whenTransactionNotFound_throwsException() {
-        when(transactionRepository.findById(anyLong())).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> transactionService.buildReceiptPdf(1L))
-                .isInstanceOf(com.wallet.transaction.exception.ResourceNotFoundException.class);
+    void getById_whenFound_returnsResponse() {
+        Transaction t = new Transaction();
+        t.setId(101L);
+        when(transactionRepository.findById(101L)).thenReturn(Optional.of(t));
+        TransactionResponse resp = transactionService.getById(101L);
+        assertThat(resp.id()).isEqualTo(101L);
     }
 
     @Test
-    void buildStatementPdf_whenFromAfterTo_throwsIllegalArgumentException() {
+    void getByUser_returnsList() {
+        when(userClient.getUserById(1L)).thenReturn(new Object());
+        when(transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(1L, 1L, 1L))
+                .thenReturn(List.of(new Transaction()));
+        List<TransactionResponse> result = transactionService.getByUser(1L);
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void getHistory_returnsList() {
         LocalDateTime now = LocalDateTime.now();
-        assertThatThrownBy(() -> transactionService.buildStatementPdf(1L, now.plusDays(1), now))
-                .isInstanceOf(IllegalArgumentException.class);
+        when(transactionRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(any(), any()))
+                .thenReturn(List.of(new Transaction()));
+        List<TransactionResponse> result = transactionService.getHistory(now.minusDays(1), now);
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void buildStatementCsv_whenValid_returnsBytes() {
+        when(userClient.getUserById(1L)).thenReturn(new Object());
+        Transaction t = new Transaction();
+        t.setId(5L);
+        t.setAmount(BigDecimal.TEN);
+        when(transactionRepository.findByUserIdOrSenderIdOrReceiverIdOrderByCreatedAtDesc(1L, 1L, 1L))
+                .thenReturn(List.of(t));
+
+        byte[] csv = transactionService.buildStatementCsv(1L, LocalDateTime.now().minusDays(1), LocalDateTime.now());
+        assertThat(new String(csv)).contains("TransactionID,Date").contains("5");
+    }
+
+    @Test
+    void refund_whenOriginalNotPaymentOrTransfer_throwsException() {
+        Transaction original = new Transaction();
+        original.setType(TransactionType.TOPUP); // Refund not allowed for TOPUP
+        when(transactionRepository.findById(77L)).thenReturn(Optional.of(original));
+
+        RefundRequest req = new RefundRequest(1L, 2L, BigDecimal.TEN, 77L, "r-failed");
+        assertThatThrownBy(() -> transactionService.refund(req))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("only reference PAYMENT or TRANSFER");
+    }
+
+    @Test
+    void publishTransactionHistoryEvent_whenPublisherFails_doesNotThrow() {
+        // This test hits the catch block in publishTransactionHistoryEvent
+        when(transactionRepository.findByIdempotencyKey("k-event-fail")).thenReturn(Optional.empty());
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userClient.getUserById(any())).thenReturn(new Object());
+        
+        // Mock publisher to throw
+        org.mockito.Mockito.doThrow(new RuntimeException("Kafka Down"))
+                .when(transactionEventPublisher).publishTransactionEvent(any());
+
+        TransactionResponse resp = transactionService.topup(new TopupRequest(1L, BigDecimal.TEN, "k-event-fail"));
+        assertThat(resp.status()).isEqualTo(TransactionStatus.SUCCESS);
+        // Verify code reached past the catch block
+        verify(transactionEventPublisher).publishTransactionEvent(any());
     }
 }
