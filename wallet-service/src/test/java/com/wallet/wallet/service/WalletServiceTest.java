@@ -176,16 +176,12 @@ class WalletServiceTest {
     }
 
     @Test
-    v
+    void confirmTopupPayment_whenNotFound_throwsException() {
+        when(integrationClient.paymentStatus("true", "pay-none")).thenReturn(null);
+        assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-none"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 
-             
-        
-                assertThatThrownBy(() -> walletService.confirmTopup
-                                .isInstanceOf(IllegalStateException.class)
-
-                
-                                
-                                
         void updateLimits_updatesAllValidFields() {
         WalletLimitConfig config = new WalletLimitConfig();
         config.setId(1L);
