@@ -76,4 +76,59 @@ class IntegrationServiceTest {
         assertThat(result.status()).isEqualTo("VERIFIED");
         verify(kycRepository).save(any());
     }
+
+    @Test
+    void updatePaymentStatus_whenValidRef_updatesAndSaves() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPaymentRef("PAY-1");
+        tx.setStatus("PENDING");
+        when(paymentRepository.findByPaymentRef("PAY-1")).thenReturn(Optional.of(tx));
+        when(paymentRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        PaymentTransaction result = integrationService.updatePaymentStatus("PAY-1", new PaymentStatusUpdateRequest("SUCCESS", "paid"));
+
+        assertThat(result.getStatus()).isEqualTo("SUCCESS");
+        verify(paymentRepository).save(any());
+    }
+
+    @Test
+    void paymentStatus_whenRefFound_returnsResponse() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPaymentRef("PAY-1");
+        tx.setStatus("SUCCESS");
+        tx.setAmount(BigDecimal.TEN);
+        tx.setUserId(1L);
+        when(paymentRepository.findByPaymentRef("PAY-1")).thenReturn(Optional.of(tx));
+
+        var response = integrationService.paymentStatus("PAY-1");
+
+        assertThat(response.status()).isEqualTo("SUCCESS");
+        assertThat(response.amount()).isEqualByComparingTo("10");
+    }
+
+    @Test
+    void refundPayment_whenSuccessful_updatesToRefunded() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPaymentRef("PAY-1");
+        tx.setStatus("SUCCESS");
+        when(paymentRepository.findByPaymentRef("PAY-1")).thenReturn(Optional.of(tx));
+        when(paymentRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        PaymentTransaction result = integrationService.refundPayment("PAY-1", new PaymentRefundRequest("Fraud"));
+
+        assertThat(result.getStatus()).isEqualTo("REFUNDED");
+        verify(paymentRepository).save(any());
+    }
+
+    @Test
+    void refundPayment_withMissingReason_throwsException() {
+        PaymentTransaction tx = new PaymentTransaction();
+        tx.setPaymentRef("PAY-1");
+        tx.setStatus("SUCCESS");
+        when(paymentRepository.findByPaymentRef("PAY-1")).thenReturn(Optional.of(tx));
+
+        assertThatThrownBy(() -> integrationService.refundPayment("PAY-1", new PaymentRefundRequest(null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Refund reason is required");
+    }
 }

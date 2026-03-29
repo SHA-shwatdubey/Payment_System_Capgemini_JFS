@@ -4,6 +4,7 @@ import com.wallet.transaction.client.UserClient;
 import com.wallet.transaction.dto.PaymentRequest;
 import com.wallet.transaction.dto.RefundRequest;
 import com.wallet.transaction.dto.TopupRequest;
+import com.wallet.transaction.dto.TransferRequest;
 import com.wallet.transaction.dto.TransactionResponse;
 import com.wallet.transaction.entity.Transaction;
 import com.wallet.transaction.entity.TransactionStatus;
@@ -24,6 +25,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -155,5 +158,60 @@ class TransactionServiceTest {
 
         // Should have been marked PENDING then FAILED during compensation
         verify(transactionRepository, times(2)).save(any());
+    }
+
+    @Test
+    void topup_whenIdempotencyConflict_throwsException() {
+        Transaction existing = new Transaction();
+        existing.setIdempotencyKey("key-1");
+        existing.setType(TransactionType.TOPUP);
+        existing.setUserId(1L);
+        existing.setAmount(new BigDecimal("100"));
+        when(transactionRepository.findByIdempotencyKey("key-1")).thenReturn(Optional.of(existing));
+
+        TopupRequest request = new TopupRequest(1L, new BigDecimal("200"), "key-1");
+        assertThatThrownBy(() -> transactionService.topup(request))
+                .isInstanceOf(com.wallet.transaction.exception.IdempotencyConflictException.class);
+    }
+
+    @Test
+    void transfer_whenSenderIsReceiver_throwsException() {
+        TransferRequest request = new TransferRequest(1L, 1L, BigDecimal.TEN, "key-2");
+        assertThatThrownBy(() -> transactionService.transfer(request))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void transfer_whenInsufficientBalance_throwsException() {
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(userClient.getUserById(any())).thenReturn(new Object());
+        when(ledgerEntryRepository.calculateBalanceForUpdate(1L)).thenReturn(BigDecimal.ZERO);
+
+        TransferRequest request = new TransferRequest(1L, 2L, BigDecimal.TEN, "key-3");
+        assertThatThrownBy(() -> transactionService.transfer(request))
+                .isInstanceOf(com.wallet.transaction.exception.InsufficientBalanceException.class);
+    }
+
+    @Test
+    void refund_whenOriginalNotFound_throwsException() {
+        when(transactionRepository.findById(999L)).thenReturn(Optional.empty());
+        RefundRequest request = new RefundRequest(1L, 2L, BigDecimal.TEN, 999L, "key-refund");
+        
+        assertThatThrownBy(() -> transactionService.refund(request))
+                .isInstanceOf(com.wallet.transaction.exception.ResourceNotFoundException.class);
+    }
+
+    @Test
+    void buildReceiptPdf_whenTransactionNotFound_throwsException() {
+        when(transactionRepository.findById(anyLong())).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> transactionService.buildReceiptPdf(1L))
+                .isInstanceOf(com.wallet.transaction.exception.ResourceNotFoundException.class);
+    }
+
+    @Test
+    void buildStatementPdf_whenFromAfterTo_throwsIllegalArgumentException() {
+        LocalDateTime now = LocalDateTime.now();
+        assertThatThrownBy(() -> transactionService.buildStatementPdf(1L, now.plusDays(1), now))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

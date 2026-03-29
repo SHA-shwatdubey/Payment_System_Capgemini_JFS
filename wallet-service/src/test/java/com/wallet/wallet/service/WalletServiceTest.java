@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import feign.FeignException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -176,9 +177,102 @@ class WalletServiceTest {
     }
 
     @Test
-    void confirmTopupPayment_whenNotFound_throwsException() {
-        when(integrationClient.paymentStatus("true", "pay-none")).thenReturn(null);
+    void confirmTopupPayment_whenFeignNotFound_throwsIllegalArgumentException() {
+        when(integrationClient.paymentStatus(any(), eq("pay-none"))).thenThrow(FeignException.NotFound.class);
         assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-none"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Payment not found");
+    }
+
+    @Test
+    void confirmTopupPayment_whenFeignError_throwsIllegalStateException() {
+        when(integrationClient.paymentStatus(any(), eq("pay-error"))).thenThrow(FeignException.ServiceUnavailable.class);
+        assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-error"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Unable to fetch payment status");
+    }
+
+    @Test
+    void confirmTopupPayment_whenStatusIsNull_throwsIllegalArgumentException() {
+        when(integrationClient.paymentStatus(any(), eq("pay-null"))).thenReturn(null);
+        assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-null"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Payment not found");
+    }
+
+    @Test
+    void confirmTopupPayment_whenStatusNotSuccess_throwsIllegalStateException() {
+        when(integrationClient.paymentStatus(any(), eq("pay-fail")))
+                .thenReturn(new ExternalPaymentStatus("pay-fail", 1L, BigDecimal.TEN, "UPI", "FAILED"));
+        assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-fail"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Payment is not successful yet");
+    }
+
+    @Test
+    void confirmTopupPayment_whenStatusSuccess_performsTopup() {
+        mockDefaultLimitChecks();
+        when(integrationClient.paymentStatus(any(), eq("pay-success")))
+                .thenReturn(new ExternalPaymentStatus("pay-success", 1L, BigDecimal.TEN, "UPI", "SUCCESS"));
+        
+        WalletAccount account = new WalletAccount();
+        account.setUserId(1L);
+        account.setBalance(BigDecimal.ZERO);
+        when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(account));
+        when(walletAccountRepository.save(any())).thenReturn(account);
+
+        PaymentTopupConfirmResponse response = walletService.confirmTopupPayment("pay-success");
+
+        assertThat(response.paymentStatus()).isEqualTo("CAPTURED");
+        verify(walletAccountRepository).save(any());
+        verify(integrationClient).updatePaymentStatus(any(), eq("pay-success"), any());
+    }
+
+    @Test
+    void transfer_whenReceiverNotFound_throwsIllegalArgumentException() {
+        mockDefaultLimitChecks();
+        when(userClient.getUserById(99L)).thenThrow(FeignException.NotFound.class);
+        TransferRequest request = new TransferRequest(1L, 99L, BigDecimal.TEN);
+        
+        assertThatThrownBy(() -> walletService.transfer(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Receiver user not found");
+    }
+
+    @Test
+    void transfer_whenUserClientFails_throwsIllegalStateException() {
+        mockDefaultLimitChecks();
+        when(userClient.getUserById(2L)).thenThrow(FeignException.InternalServerError.class);
+        TransferRequest request = new TransferRequest(1L, 2L, BigDecimal.TEN);
+        
+        assertThatThrownBy(() -> walletService.transfer(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Unable to validate receiver user");
+    }
+
+    @Test
+    void transfer_whenInsufficientBalance_throwsIllegalArgumentException() {
+        mockDefaultLimitChecks();
+        when(userClient.getUserById(2L)).thenReturn(new Object());
+        
+        WalletAccount from = new WalletAccount();
+        from.setUserId(1L);
+        from.setBalance(new BigDecimal("5.00"));
+        when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(from));
+
+        TransferRequest request = new TransferRequest(1L, 2L, new BigDecimal("10.00"));
+        assertThatThrownBy(() -> walletService.transfer(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Insufficient wallet balance");
+    }
+
+    @Test
+    void updateLimits_whenInvalidValues_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> walletService.updateLimits(new WalletLimitUpdateRequest(BigDecimal.ZERO, null, null)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> walletService.updateLimits(new WalletLimitUpdateRequest(null, BigDecimal.ZERO, null)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> walletService.updateLimits(new WalletLimitUpdateRequest(null, null, 0)))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

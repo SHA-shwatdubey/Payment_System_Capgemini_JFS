@@ -22,7 +22,11 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -107,5 +111,56 @@ class AdminServiceTest {
 
         assertThatThrownBy(() -> adminService.approveKyc(7L, request)).isInstanceOf(RuntimeException.class);
         verify(adminActionRepository, never()).save(any(AdminAction.class));
+    }
+
+    @Test
+    void updateCampaign_withVariousUpdates_savesCorrectly() {
+        Campaign campaign = new Campaign();
+        campaign.setId(10L);
+        campaign.setName("Old Name");
+        when(campaignRepository.findById(10L)).thenReturn(java.util.Optional.of(campaign));
+        when(campaignRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Map<String, Object> updates = Map.of(
+            "name", "New Name",
+            "status", "INACTIVE",
+            "bonusPoints", 50
+        );
+
+        Campaign result = adminService.updateCampaign(10L, updates);
+
+        assertThat(result.getName()).isEqualTo("New Name");
+        assertThat(result.getStatus()).isEqualTo("INACTIVE");
+        assertThat(result.isActive()).isFalse();
+        assertThat(result.getBonusPoints()).isEqualTo(50);
+    }
+
+    @Test
+    void activateAndDeactivate_updatesStatusAndActiveFlag() {
+        Campaign campaign = new Campaign();
+        campaign.setId(1L);
+        when(campaignRepository.findById(1L)).thenReturn(java.util.Optional.of(campaign));
+        when(campaignRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        adminService.activateCampaign(1L);
+        assertThat(campaign.isActive()).isTrue();
+        assertThat(campaign.getStatus()).isEqualTo("ACTIVE");
+
+        adminService.deactivateCampaign(1L);
+        assertThat(campaign.isActive()).isFalse();
+        assertThat(campaign.getStatus()).isEqualTo("INACTIVE");
+    }
+
+    @Test
+    void deleteCampaign_callsRepository() {
+        adminService.deleteCampaign(1L);
+        verify(campaignRepository).deleteById(1L);
+    }
+
+    @Test
+    void getCampaigns_returnsAll() {
+        when(campaignRepository.findAll()).thenReturn(List.of(new Campaign()));
+        List<Campaign> result = adminService.getCampaigns();
+        assertThat(result).hasSize(1);
     }
 }
