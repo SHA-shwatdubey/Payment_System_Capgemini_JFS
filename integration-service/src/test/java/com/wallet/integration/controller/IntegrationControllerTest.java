@@ -21,50 +21,47 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = IntegrationController.class, properties = {
-        "spring.cloud.config.enabled=false",
-        "spring.cloud.config.import-check.enabled=false",
-        "spring.cloud.config.fail-fast=false",
-        "spring.config.import=optional:configserver:",
-        "eureka.client.enabled=false"
+                "spring.cloud.config.enabled=false",
+                "spring.cloud.config.import-check.enabled=false",
+                "spring.cloud.config.fail-fast=false",
+                "spring.config.import=optional:configserver:",
+                "eureka.client.enabled=false"
 })
 class IntegrationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockBean
-    private IntegrationService integrationService;
+        @MockBean
+        private IntegrationService integrationService;
 
-    @MockBean
-    private JwtRoleValidator jwtRoleValidator;
+        @MockBean
+        private JwtRoleValidator jwtRoleValidator;
 
-    @Test
-    void initPayment_withInternalHeader_returnsResponse() throws Exception {
-        when(integrationService.initPayment(any(PaymentInitRequest.class)))
-                .thenReturn(new PaymentInitResponse("PAY-1", "PENDING", "https://mock/1"));
+        @Test
+        void initPayment_withInternalHeader_returnsResponse() throws Exception {
+                when(integrationService.initPayment(any(PaymentInitRequest.class)))
+                                .thenReturn(new PaymentInitResponse("PAY-1", "PENDING", "https://mock/1"));
 
-        PaymentInitRequest request = new PaymentInitRequest(9L, new BigDecimal("200"), "UPI");
-        mockMvc.perform(post("/api/integrations/payments/init")
-                        .header("X-Internal-Call", "true")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.paymentRef").value("PAY-1"));
-    }
+                PaymentInitRequest request = new PaymentInitRequest(9L, new BigDecimal("200"), "UPI");
+                mockMvc.perform(post("/api/integrations/payments/init")
+                                .header("X-Internal-Call", "true")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.paymentRef").value("PAY-1"));
+        }
 
-    @Test
-    void initPayment_withoutAuth_returnsUnauthorized() throws Exception {
-        PaymentInitRequest request = new PaymentInitRequest(9L, new BigDecimal("200"), "UPI");
+        @Test
+        void initPayment_withoutAuth_returnsUnauthorized() throws Exception {
+                PaymentInitRequest request = new PaymentInitRequest(9L, new BigDecimal("200"), "UPI");
 
-        mockMvc.perform(post("/api/integrations/payments/init")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
-    }
+                mockMvc.perform(post("/api/integrations/payments/init")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isUnauthorized());
+        }
 }
-
-
-

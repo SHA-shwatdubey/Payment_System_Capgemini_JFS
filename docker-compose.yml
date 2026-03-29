@@ -143,6 +143,7 @@ services:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8061/eureka/
       SPRING_CONFIG_IMPORT: configserver:http://config-server:8060
       ZIPKIN_URL: http://zipkin:9411/api/v2/spans
+      GATEWAY_ALLOWED_ORIGINS: "*"
     ports:
       - "8062:8062"
     networks:

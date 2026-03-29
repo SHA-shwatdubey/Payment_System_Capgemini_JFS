@@ -28,11 +28,14 @@ class OtpServiceTest {
     @Mock
     private OtpRepository otpRepository;
 
-    @Mock
-    private JavaMailSender mailSender;
-
-    @InjectMocks
     private OtpService otpService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        otpService = new OtpService();
+        // Manually inject the repository since we removed @InjectMocks to avoid issues
+        org.springframework.test.util.ReflectionTestUtils.setField(otpService, "otpRepository", otpRepository);
+    }
 
     @Test
     void generateAndSendOtp_email_savesRequestAndReturnsMaskedEmail() {
@@ -133,10 +136,49 @@ class OtpServiceTest {
     }
 
     @Test
-    void cleanupExpiredOtps_deletesByCurrentTime() {
-        otpService.cleanupExpiredOtps();
+    void generateAndSendOtp_sms_savesRequestAndReturnsMaskedPhone() {
+        OtpRequestDto request = new OtpRequestDto(null, "+911234567890", "SMS");
+        when(otpRepository.save(any(OtpEntity.class))).thenAnswer(i -> i.getArgument(0));
 
-        verify(otpRepository).deleteByExpiresAtBefore(any(LocalDateTime.class));
+        String response = otpService.generateAndSendOtp(request);
+
+        assertThat(response).contains("*******890");
+        verify(otpRepository).save(any());
+    }
+
+    @Test
+    void verifyOtp_withPhone_marksAsVerified() {
+        OtpEntity entity = new OtpEntity();
+        entity.setOtp("654321");
+        entity.setPhoneNumber("+19998887777");
+        entity.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+        entity.setAttemptCount(0);
+        entity.setIsVerified(false);
+
+        when(otpRepository.findByPhoneNumberAndOtpAndIsVerifiedFalse("+19998887777", "654321"))
+                .thenReturn(Optional.of(entity));
+
+        boolean verified = otpService.verifyOtp(new OtpVerificationDto(null, "+19998887777", "654321"));
+
+        assertThat(verified).isTrue();
+        assertThat(entity.getIsVerified()).isTrue();
+        verify(otpRepository).save(entity);
+    }
+
+    @Test
+    void maskEmail_withShortName_masksProperly() {
+        // Since maskEmail is private, we test it via generateAndSendOtp
+        OtpRequestDto request = new OtpRequestDto("ab@x.com", null, "EMAIL");
+        when(otpRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        String response = otpService.generateAndSendOtp(request);
+        assertThat(response).contains("ab@x.com"); // "ab".length <= 2 logic
+    }
+
+    @Test
+    void cleanupExpiredOtps_callsRepository() {
+        otpService.cleanupExpiredOtps();
+        verify(otpRepository).deleteByExpiresAtBefore(any());
     }
 }
 

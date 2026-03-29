@@ -38,6 +38,7 @@ public class OtpService {
     private String twilioFromNumber;
 
     private boolean twilioInitialized = false;
+    private final Random random = new Random();
 
     public String generateAndSendOtp(OtpRequestDto request) {
         String otpType = request.getOtpType() == null ? "" : request.getOtpType().trim();
@@ -167,7 +168,6 @@ public class OtpService {
     }
 
     private String generateRandomOtp() {
-        Random random = new Random();
         int otp = random.nextInt((int) Math.pow(10, OTP_LENGTH));
         return String.format("%0" + OTP_LENGTH + "d", otp);
     }

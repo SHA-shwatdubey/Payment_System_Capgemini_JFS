@@ -49,7 +49,8 @@ class IntegrationServiceTest {
     void updatePaymentStatus_whenRefMissing_throwsException() {
         when(paymentRepository.findByPaymentRef("missing")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> integrationService.updatePaymentStatus("missing", new PaymentStatusUpdateRequest("SUCCESS", "ok")))
+        assertThatThrownBy(() -> integrationService.updatePaymentStatus("missing",
+                new PaymentStatusUpdateRequest("SUCCESS", "ok")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Payment ref not found");
     }
@@ -76,4 +77,3 @@ class IntegrationServiceTest {
         verify(kycRepository).save(any());
     }
 }
-

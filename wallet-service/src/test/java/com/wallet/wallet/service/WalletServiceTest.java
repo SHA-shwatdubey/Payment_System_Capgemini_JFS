@@ -33,131 +33,134 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class WalletServiceTest {
 
-    @Mock
-    private WalletAccountRepository walletAccountRepository;
+        @Mock
+        private WalletAccountRepository walletAccountRepository;
 
-    @Mock
-    private LedgerEntryRepository ledgerEntryRepository;
+        @Mock
+        private LedgerEntryRepository ledgerEntryRepository;
 
-    @Mock
-    private WalletEventPublisher eventPublisher;
+        @Mock
+        private WalletEventPublisher eventPublisher;
 
-    @Mock
-    private UserClient userClient;
+        @Mock
+        private UserClient userClient;
 
-    @Mock
-    private WalletLimitConfigRepository walletLimitConfigRepository;
+        @Mock
+        private WalletLimitConfigRepository walletLimitConfigRepository;
 
-    @Mock
-    private NotificationClient notificationClient;
+        @Mock
+        private NotificationClient notificationClient;
 
-    @Mock
-    private IntegrationClient integrationClient;
+        @Mock
+        private IntegrationClient integrationClient;
 
-    @InjectMocks
-    private WalletService walletService;
+        @InjectMocks
+        private WalletService walletService;
 
-    private void mockDefaultLimitChecks() {
-        WalletLimitConfig config = new WalletLimitConfig();
-        config.setId(1L);
-        config.setDailyTopupLimit(new BigDecimal("10000"));
-        config.setDailyTransferLimit(new BigDecimal("5000"));
-        config.setDailyTransferCountLimit(3);
+        private void mockDefaultLimitChecks() {
+                WalletLimitConfig config = new WalletLimitConfig();
+                config.setId(1L);
+                config.setDailyTopupLimit(new BigDecimal("10000"));
+                config.setDailyTransferLimit(new BigDecimal("5000"));
+                config.setDailyTransferCountLimit(3);
 
-        when(walletLimitConfigRepository.findById(1L)).thenReturn(Optional.of(config));
-        when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), any(), any(), any()))
-                .thenReturn(BigDecimal.ZERO);
-    }
+                when(walletLimitConfigRepository.findById(1L)).thenReturn(Optional.of(config));
+                when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), any(), any(), any()))
+                                .thenReturn(BigDecimal.ZERO);
+        }
 
-    @Test
-    void topup_withValidRequest_updatesBalance() {
-        mockDefaultLimitChecks();
+        @Test
+        void topup_withValidRequest_updatesBalance() {
+                mockDefaultLimitChecks();
 
-        WalletAccount account = new WalletAccount();
-        account.setUserId(1L);
-        account.setBalance(new BigDecimal("100"));
+                WalletAccount account = new WalletAccount();
+                account.setUserId(1L);
+                account.setBalance(new BigDecimal("100"));
 
-        when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(account));
-        when(walletAccountRepository.save(any(WalletAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
+                when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(account));
+                when(walletAccountRepository.save(any(WalletAccount.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        WalletAccount result = walletService.topup(new TopupRequest(1L, new BigDecimal("50"), "UPI"));
+                WalletAccount result = walletService.topup(new TopupRequest(1L, new BigDecimal("50"), "UPI"));
 
-        assertThat(result.getBalance()).isEqualByComparingTo("150");
-        verify(eventPublisher).publish(any());
-    }
+                assertThat(result.getBalance()).isEqualByComparingTo("150");
+                verify(eventPublisher).publish(any());
+        }
 
-    @Test
-    void transfer_sameSenderAndReceiver_throwsException() {
-        TransferRequest request = new TransferRequest(2L, 2L, new BigDecimal("10"));
+        @Test
+        void transfer_sameSenderAndReceiver_throwsException() {
+                TransferRequest request = new TransferRequest(2L, 2L, new BigDecimal("10"));
 
-        assertThatThrownBy(() -> walletService.transfer(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Sender and receiver cannot be the same");
-    }
+                assertThatThrownBy(() -> walletService.transfer(request))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("Sender and receiver cannot be the same");
+        }
 
-    @Test
-    void history_withNullUserId_throwsException() {
-        assertThatThrownBy(() -> walletService.history(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("User id is required");
-    }
+        @Test
+        void history_withNullUserId_throwsException() {
+                assertThatThrownBy(() -> walletService.history(null))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("User id is required");
+        }
 
-    @Test
-    void initTopupPayment_delegatesToIntegrationClient() {
-        PaymentTopupInitRequest request = new PaymentTopupInitRequest(1L, new BigDecimal("90.00"), "UPI");
-        when(integrationClient.initPayment(eq("true"), any(PaymentTopupInitRequest.class)))
-                .thenReturn(new PaymentTopupInitResponse("pay-1", "CREATED", "https://url"));
+        @Test
+        void initTopupPayment_delegatesToIntegrationClient() {
+                PaymentTopupInitRequest request = new PaymentTopupInitRequest(1L, new BigDecimal("90.00"), "UPI");
+                when(integrationClient.initPayment(eq("true"), any(PaymentTopupInitRequest.class)))
+                                .thenReturn(new PaymentTopupInitResponse("pay-1", "CREATED", "https://url"));
 
-        PaymentTopupInitResponse response = walletService.initTopupPayment(request);
+                PaymentTopupInitResponse response = walletService.initTopupPayment(request);
 
-        assertThat(response.paymentRef()).isEqualTo("pay-1");
-    }
+                assertThat(response.paymentRef()).isEqualTo("pay-1");
+        }
 
-    @Test
-    void confirmTopupPayment_whenStatusCaptured_returnsExistingAccount() {
-        WalletAccount account = new WalletAccount();
-        account.setUserId(5L);
-        account.setBalance(new BigDecimal("200"));
-        when(integrationClient.paymentStatus("true", "pay-2"))
-                .thenReturn(new ExternalPaymentStatus("pay-2", 5L, new BigDecimal("40"), "UPI", "CAPTURED"));
-        when(walletAccountRepository.findByUserId(5L)).thenReturn(Optional.of(account));
+        @Test
+        void confirmTopupPayment_whenStatusCaptured_returnsExistingAccount() {
+                WalletAccount account = new WalletAccount();
+                account.setUserId(5L);
+                account.setBalance(new BigDecimal("200"));
+                when(integrationClient.paymentStatus("true", "pay-2"))
+                                .thenReturn(new ExternalPaymentStatus("pay-2", 5L, new BigDecimal("40"), "UPI",
+                                                "CAPTURED"));
+                when(walletAccountRepository.findByUserId(5L)).thenReturn(Optional.of(account));
 
-        PaymentTopupConfirmResponse response = walletService.confirmTopupPayment("pay-2");
+                PaymentTopupConfirmResponse response = walletService.confirmTopupPayment("pay-2");
 
-        assertThat(response.paymentStatus()).isEqualTo("CAPTURED");
-        assertThat(response.walletAccount().getBalance()).isEqualByComparingTo("200");
-    }
+                assertThat(response.paymentStatus()).isEqualTo("CAPTURED");
+                assertThat(response.walletAccount().getBalance()).isEqualByComparingTo("200");
+        }
 
-    @Test
-    void topup_whenDailyLimitExceeded_throwsException() {
-        WalletLimitConfig config = new WalletLimitConfig();
-        config.setDailyTopupLimit(new BigDecimal("100"));
-        when(walletLimitConfigRepository.findById(1L)).thenReturn(Optional.of(config));
-        when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), any(), any(), any()))
-                .thenReturn(new BigDecimal("90"));
+        @Test
+        void topup_whenDailyLimitExceeded_throwsException() {
+                WalletLimitConfig config = new WalletLimitConfig();
+                config.setDailyTopupLimit(new BigDecimal("100"));
+                when(walletLimitConfigRepository.findById(1L)).thenReturn(Optional.of(config));
+                when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), any(), any(), any()))
+                                .thenReturn(new BigDecimal("90"));
 
-        TopupRequest req = new TopupRequest(1L, new BigDecimal("20"), "CARD");
-        assertThatThrownBy(() -> walletService.topup(req))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Daily topup limit exceeded");
-    }
+                TopupRequest req = new TopupRequest(1L, new BigDecimal("20"), "CARD");
+                assertThatThrownBy(() -> walletService.topup(req))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("Daily topup limit exceeded");
+        }
 
-    @Test
-    void transfer_whenDailyLimitExceeded_throwsException() {
-        mockDefaultLimitChecks();
-        when(userClient.getUserById(2L)).thenReturn(new Object());
-        when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), eq("TRANSFER_DEBIT"), any(), any()))
-                .thenReturn(new BigDecimal("-4995")); // Limit is 5000
+        @Test
+        void transfer_whenDailyLimitExceeded_throwsException() {
+                mockDefaultLimitChecks();
+                when(userClient.getUserById(2L)).thenReturn(new Object());
+                when(ledgerEntryRepository.sumByUserAndTypeAndCreatedAtBetween(any(), eq("TRANSFER_DEBIT"), any(),
+                                any()))
+                                .thenReturn(new BigDecimal("-4995")); // Limit is 5000
 
-        WalletAccount from = new WalletAccount();
-        from.setBalance(new BigDecimal("1000"));
-        when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(from));
+                WalletAccount from = new WalletAccount();
+                from.setBalance(new BigDecimal("1000"));
+                when(walletAccountRepository.findByUserId(1L)).thenReturn(Optional.of(from));
 
-        TransferRequest req = new TransferRequest(1L, 2L, new BigDecimal("10"));
-        assertThatThrownBy(() -> walletService.transfer(req))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Daily transfer limit exceeded");
-    }
+                TransferRequest req = new TransferRequest(1L, 2L, new BigDecimal("10"));
+                assertThatThrownBy(() -> walletService.transfer(req))
+                                .isInstanceOf(IllegalArgumentException.class)
+                                .hasMessageContaining("Daily transfer limit exceeded");
+        }
 
     @Test
     void transfer_whenDailyCountLimitExceeded_throwsException() {
@@ -173,17 +176,17 @@ class WalletServiceTest {
     }
 
     @Test
-    void confirmTopupPayment_whenStatusNotSuccess_throwsException() {
-        when(integrationClient.paymentStatus(any(), any()))
-                .thenReturn(new ExternalPaymentStatus("pay-ref", 1L, BigDecimal.TEN, "UPI", "FAILED"));
+    v
 
-        assertThatThrownBy(() -> walletService.confirmTopupPayment("pay-ref"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Payment is not successful yet");
-    }
+             
+        
+                assertThatThrownBy(() -> walletService.confirmTopup
+                                .isInstanceOf(IllegalStateException.class)
 
-    @Test
-    void updateLimits_updatesAllValidFields() {
+                
+                                
+                                
+        void updateLimits_updatesAllValidFields() {
         WalletLimitConfig config = new WalletLimitConfig();
         config.setId(1L);
         when(walletLimitConfigRepository.findById(1L)).thenReturn(Optional.of(config));
@@ -198,10 +201,3 @@ class WalletServiceTest {
         assertThat(result.getDailyTransferCountLimit()).isEqualTo(5);
     }
 }
-
-
-
-
-
-
-

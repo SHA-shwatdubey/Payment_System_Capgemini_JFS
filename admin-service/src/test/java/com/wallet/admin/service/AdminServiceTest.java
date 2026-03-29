@@ -43,7 +43,8 @@ class AdminServiceTest {
 
     @Test
     void createCampaign_savesAndReturnsEntity() {
-        CampaignRequest request = new CampaignRequest("Cashback", "TOPUP", 20, LocalDate.now(), LocalDate.now().plusDays(3));
+        CampaignRequest request = new CampaignRequest("Cashback", "TOPUP", 20, LocalDate.now(),
+                LocalDate.now().plusDays(3));
         Campaign saved = new Campaign();
         saved.setId(1L);
         saved.setName("Cashback");
@@ -108,5 +109,3 @@ class AdminServiceTest {
         verify(adminActionRepository, never()).save(any(AdminAction.class));
     }
 }
-
-

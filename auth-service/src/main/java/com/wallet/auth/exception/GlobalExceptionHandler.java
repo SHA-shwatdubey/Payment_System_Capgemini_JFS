@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+        System.err.println("[GlobalExceptionHandler] Caught unhandled exception: " + ex.getClass().getName() + " - " + ex.getMessage());
         ex.printStackTrace();
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
     }

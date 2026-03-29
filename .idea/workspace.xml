@@ -7,30 +7,9 @@
     <list default="true" id="77c77317-8c51-480a-bce2-d9b1899e8a8e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/admin-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/admin-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config-server/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/config-server/src/main/resources/logback-spring.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SAGA_IMPLEMENTATION.md" beforeDir="false" afterPath="$PROJECT_DIR$/SAGA_IMPLEMENTATION.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/wallet/auth/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/java/com/wallet/auth/controller/AuthController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker/init/01-create-databases.sql" beforeDir="false" afterPath="$PROJECT_DIR$/docker/init/01-create-databases.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eureka-server/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/auth/login/login.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/integration-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/integration-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/integration-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/integration-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/notification-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rewards-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/rewards-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rewards-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/rewards-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/transaction-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/java/com/wallet/transaction/service/TransactionServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/java/com/wallet/transaction/service/TransactionServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/transaction-service/src/test/resources/logback-test.xml" beforeDir="false" afterPath="$PROJECT_DIR$/transaction-service/src/test/resources/logback-test.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-kyc-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-kyc-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wallet-service/src/main/resources/logback-spring.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/main/resources/logback-spring.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wallet-service/src/test/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/wallet-service/src/test/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +24,7 @@
     </persistenceIdMap>
   </component>
   <component name="CopilotUserSelectedChatMode">
-    <option name="chatModeId" value="Ask" />
+    <option name="chatModeId" value="Agent" />
   </component>
   <component name="CopilotUserSelectedModel">
     <selectedModels>
@@ -54,7 +33,7 @@
     </selectedModels>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="39702" />
+    <option name="cachedIndexableFilesCount" value="39720" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />

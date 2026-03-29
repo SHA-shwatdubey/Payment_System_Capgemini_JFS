@@ -61,7 +61,7 @@ public class AuthController {
         response.put("name", "Shashwat");
         response.put("email", "shashwatdtech@gmail.com");
         response.put("phone", "9555660256");
-        response.put("status", "✅ Ready for OTP Testing");
+        response.put("status", " Ready for OTP Testing");
         response.put("message", "You can now use /api/auth/otp endpoints");
         return ResponseEntity.ok(response);
     }

@@ -24,8 +24,9 @@ public class DisputeService {
 
     @Transactional
     public Dispute create(DisputeCreateRequest request) {
-        transactionRepository.findById(request.transactionId())
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+        if (!transactionRepository.existsById(request.transactionId())) {
+            throw new IllegalArgumentException("Transaction not found");
+        }
 
         Dispute dispute = new Dispute();
         dispute.setTransactionId(request.transactionId());

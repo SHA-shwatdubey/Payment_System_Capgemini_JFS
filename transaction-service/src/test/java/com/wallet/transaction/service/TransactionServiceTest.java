@@ -89,7 +89,8 @@ class TransactionServiceTest {
         when(ledgerEntryRepository.calculateBalanceForUpdate(any())).thenReturn(new BigDecimal("50"));
         when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        TransactionResponse resp = transactionService.refund(new RefundRequest(1L, 2L, new BigDecimal("10"), 77L, "r1"));
+        TransactionResponse resp = transactionService
+                .refund(new RefundRequest(1L, 2L, new BigDecimal("10"), 77L, "r1"));
 
         assertThat(resp.status()).isEqualTo(TransactionStatus.SUCCESS);
         verify(ledgerEntryRepository, times(2)).save(any());
@@ -108,8 +109,8 @@ class TransactionServiceTest {
 
         String content = new String(pdf);
         assertThat(content)
-            .contains("NEXPAY TRANSACTION RECEIPT")
-            .contains("INR 75.50");
+                .contains("NEXPAY TRANSACTION RECEIPT")
+                .contains("INR 75.50");
     }
 
     @Test
