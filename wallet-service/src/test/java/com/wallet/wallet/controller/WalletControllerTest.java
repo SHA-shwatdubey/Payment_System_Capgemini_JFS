@@ -6,6 +6,7 @@ import com.wallet.wallet.dto.PaymentTopupInitRequest;
 import com.wallet.wallet.dto.PaymentTopupInitResponse;
 import com.wallet.wallet.dto.TopupRequest;
 import com.wallet.wallet.dto.TransferRequest;
+import com.wallet.wallet.dto.WalletLimitUpdateRequest;
 import com.wallet.wallet.entity.WalletAccount;
 import com.wallet.wallet.entity.WalletLimitConfig;
 import com.wallet.wallet.service.WalletService;
@@ -17,7 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Collections;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -26,108 +28,108 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(value = WalletController.class, properties = {
-                "spring.cloud.config.enabled=false",
-                "spring.cloud.config.import-check.enabled=false",
-                "spring.cloud.config.fail-fast=false",
-                "spring.config.import=optional:configserver:",
-                "eureka.client.enabled=false"
-})
+@WebMvcTest(WalletController.class)
 class WalletControllerTest {
 
-        @Autowired
-        private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-        @Autowired
-        private ObjectMapper objectMapper;
+    @MockBean
+    private WalletService walletService;
 
-        @MockBean
-        private WalletService walletService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-        @Test
-        void getBalance_returnsBalance() throws Exception {
-                when(walletService.getBalance(7L)).thenReturn(new BigDecimal("900.00"));
+    @Test
+    void getBalance_returnsBalance() throws Exception {
+        when(walletService.getBalance(1L)).thenReturn(new BigDecimal("100.00"));
 
-                mockMvc.perform(get("/api/wallet/balance").param("userId", "7"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.balance").value(900.00));
-        }
+        mockMvc.perform(get("/api/wallet/balance").param("userId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.balance").value(100.00));
+    }
 
-        @Test
-        void topup_returnsUpdatedAccount() throws Exception {
-                WalletAccount account = new WalletAccount();
-                account.setId(1L);
-                account.setUserId(9L);
-                account.setBalance(new BigDecimal("500.00"));
-                when(walletService.topup(any(TopupRequest.class))).thenReturn(account);
+    @Test
+    void topup_returnsAccount() throws Exception {
+        TopupRequest req = new TopupRequest(1L, new BigDecimal("50.00"), "UPI");
+        WalletAccount account = new WalletAccount();
+        account.setUserId(1L);
+        account.setBalance(new BigDecimal("150.00"));
+        when(walletService.topup(any())).thenReturn(account);
 
-                TopupRequest request = new TopupRequest(9L, new BigDecimal("500.00"), "UPI");
-                mockMvc.perform(post("/api/wallet/topup")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.userId").value(9L));
-        }
+        mockMvc.perform(post("/api/wallet/topup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.balance").value(150.00));
+    }
 
-        @Test
-        void transactions_returnsHistory() throws Exception {
-                when(walletService.history(9L)).thenReturn(List.of());
+    @Test
+    void initTopup_returnsInitResponse() throws Exception {
+        PaymentTopupInitRequest req = new PaymentTopupInitRequest(1L, new BigDecimal("20.00"), "UPI");
+        PaymentTopupInitResponse resp = new PaymentTopupInitResponse("PAY-REF-1", "PENDING", "http://mock-pay.local");
+        when(walletService.initTopupPayment(any())).thenReturn(resp);
 
-                mockMvc.perform(get("/api/wallet/transactions").param("userId", "9"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$").isArray());
-        }
+        mockMvc.perform(post("/api/wallet/topup/init")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentRef").value("PAY-REF-1"));
+    }
 
-        @Test
-        void initTopup_returnsGatewayResponse() throws Exception {
-                when(walletService.initTopupPayment(any(PaymentTopupInitRequest.class)))
-                                .thenReturn(new PaymentTopupInitResponse("pay-1", "CREATED", "https://pay"));
+    @Test
+    void confirmTopup_returnsConfirmResponse() throws Exception {
+        WalletAccount account = new WalletAccount();
+        account.setUserId(1L);
+        account.setBalance(new BigDecimal("200.00"));
+        PaymentTopupConfirmResponse resp = new PaymentTopupConfirmResponse("PAY-REF-1", "CAPTURED", account);
+        when(walletService.confirmTopupPayment("PAY-REF-1")).thenReturn(resp);
 
-                mockMvc.perform(post("/api/wallet/topup/init")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(
-                                                new PaymentTopupInitRequest(3L, new BigDecimal("55.00"), "UPI"))))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.paymentRef").value("pay-1"));
-        }
+        mockMvc.perform(post("/api/wallet/topup/confirm/PAY-REF-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentStatus").value("CAPTURED"));
+    }
 
-        @Test
-        void confirmTopup_returnsConfirmationPayload() throws Exception {
-                WalletAccount account = new WalletAccount();
-                account.setUserId(3L);
-                account.setBalance(new BigDecimal("155.00"));
-                when(walletService.confirmTopupPayment("pay-2"))
-                                .thenReturn(new PaymentTopupConfirmResponse("pay-2", "CAPTURED", account));
+    @Test
+    void transfer_returnsMessage() throws Exception {
+        TransferRequest req = new TransferRequest(1L, 2L, new BigDecimal("10.00"));
+        when(walletService.transfer(any())).thenReturn("Transfer successful");
 
-                mockMvc.perform(post("/api/wallet/topup/confirm/pay-2"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.paymentStatus").value("CAPTURED"))
-                                .andExpect(jsonPath("$.walletAccount.userId").value(3L));
-        }
+        mockMvc.perform(post("/api/wallet/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Transfer successful"));
+    }
 
-        @Test
-        void transfer_returnsSuccessMessage() throws Exception {
-                when(walletService.transfer(any(TransferRequest.class))).thenReturn("Transfer successful");
+    @Test
+    void transactions_returnsList() throws Exception {
+        when(walletService.history(1L)).thenReturn(Collections.emptyList());
 
-                mockMvc.perform(post("/api/wallet/transfer")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(
-                                                new TransferRequest(1L, 2L, new BigDecimal("10.00")))))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.message").value("Transfer successful"));
-        }
+        mockMvc.perform(get("/api/wallet/transactions").param("userId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
 
-        @Test
-        void limits_returnsConfig() throws Exception {
-                WalletLimitConfig config = new WalletLimitConfig();
-                config.setId(1L);
-                config.setDailyTopupLimit(new BigDecimal("50000"));
-                config.setDailyTransferLimit(new BigDecimal("25000"));
-                config.setDailyTransferCountLimit(10);
-                when(walletService.getLimits()).thenReturn(config);
+    @Test
+    void limits_returnsConfig() throws Exception {
+        WalletLimitConfig config = new WalletLimitConfig(1L, new BigDecimal("50000"), new BigDecimal("25000"), 10);
+        when(walletService.getLimits()).thenReturn(config);
 
-                mockMvc.perform(get("/api/wallet/admin/limits"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.id").value(1L));
-        }
+        mockMvc.perform(get("/api/wallet/admin/limits"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dailyTopupLimit").value(50000));
+    }
+
+    @Test
+    void updateLimits_returnsConfig() throws Exception {
+        WalletLimitUpdateRequest req = new WalletLimitUpdateRequest(new BigDecimal("1000"), new BigDecimal("500"), 5);
+        WalletLimitConfig config = new WalletLimitConfig(1L, new BigDecimal("1000"), new BigDecimal("500"), 5);
+        when(walletService.updateLimits(any())).thenReturn(config);
+
+        mockMvc.perform(post("/api/wallet/admin/limits")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk());
+    }
 }
