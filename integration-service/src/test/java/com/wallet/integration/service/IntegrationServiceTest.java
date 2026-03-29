@@ -5,7 +5,6 @@ import com.wallet.integration.dto.KycVerifyResponse;
 import com.wallet.integration.dto.PaymentInitRequest;
 import com.wallet.integration.dto.PaymentInitResponse;
 import com.wallet.integration.dto.PaymentRefundRequest;
-import com.wallet.integration.dto.PaymentStatusResponse;
 import com.wallet.integration.dto.PaymentStatusUpdateRequest;
 import com.wallet.integration.entity.PaymentTransaction;
 import com.wallet.integration.repository.KycVerificationRepository;

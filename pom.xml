@@ -134,12 +134,10 @@
                             <include>com/wallet/**</include>
                         </includes>
                         <excludes>
-                            <exclude>**/dto/**</exclude>
-                            <exclude>**/entity/**</exclude>
                             <exclude>**/config/**</exclude>
                             <exclude>**/exception/**</exclude>
-                            <exclude>**/*Application.class</exclude>
                             <exclude>**/security/**</exclude>
+                            <exclude>**/*Application.class</exclude>
                             <exclude>**/*Client.class</exclude>
                             <exclude>**/*Repository.class</exclude>
                             <exclude>**/*MockitoMock*</exclude>
