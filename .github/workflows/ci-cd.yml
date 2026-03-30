@@ -180,7 +180,7 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.ssh
           KEY_CONTENT='${{ secrets.SSH_PRIVATE_KEY }}'
-          HOST=$(echo '${{ secrets.EC2_PUBLIC_IP }}' | xargs)
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | tr -d '[:space:]')
 
           if [ -z "$KEY_CONTENT" ]; then
             echo "SSH_PRIVATE_KEY secret is empty"
@@ -215,7 +215,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | tr -d '[:space:]')
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
 
           retry_ssh() {
@@ -250,7 +250,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | tr -d '[:space:]')
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
           for i in 1 2 3 4 5; do
             if ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
@@ -295,7 +295,7 @@ jobs:
       - name: Verify Deployment
         run: |
           set -euo pipefail
-          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | tr -d '[:space:]')
           echo "✅ Deployment completed!"
           echo ""
           echo "Service URLs:"
@@ -310,7 +310,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | tr -d '[:space:]')
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
           ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
           set +e
