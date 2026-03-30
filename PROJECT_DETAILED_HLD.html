@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexPay — Complete Project Deep-Dive</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e1a;--card:#111827;--card2:#1a2236;--border:#1e293b;--accent:#6366f1;--accent2:#818cf8;--green:#10b981;--blue:#3b82f6;--orange:#f59e0b;--pink:#ec4899;--red:#ef4444;--cyan:#06b6d4;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.ctr{max-width:1200px;margin:0 auto;padding:0 24px}
+.hero{min-height:80vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.15),transparent 70%);top:-100px;right:-100px;animation:fl 8s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;background:linear-gradient(135deg,#6366f1,#ec4899,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero .sub{font-size:1.1rem;color:var(--text2);max-width:750px;margin:0 auto 24px}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.badge{padding:5px 14px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid var(--border);background:var(--card)}
+section{padding:64px 0;border-bottom:1px solid var(--border)}
+.sn{font-size:.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px}
+.st{font-size:1.8rem;font-weight:800;margin-bottom:6px}
+.sd{color:var(--text2);margin-bottom:32px;font-size:.95rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;transition:.3s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
+.card p,.card li{color:var(--text2);font-size:.88rem}
+.card ul{padding-left:18px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin:12px 0}
+th{background:var(--card2);color:var(--accent2);padding:10px 14px;text-align:left;font-weight:600;border-bottom:2px solid var(--accent)}
+td{padding:8px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+tr:hover td{background:rgba(99,102,241,.04)}
+code{background:var(--card2);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--cyan)}
+.m{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.68rem;font-weight:700;font-family:'JetBrains Mono',monospace;min-width:42px;text-align:center}
+.m.g{background:#065f46;color:#6ee7b7}.m.p{background:#1e3a5f;color:#7dd3fc}.m.u{background:#713f12;color:#fcd34d}.m.d{background:#7f1d1d;color:#fca5a5}
+.step{display:flex;gap:16px;margin-bottom:20px;position:relative}
+.step::after{content:'';position:absolute;left:18px;top:40px;bottom:-20px;width:2px;background:var(--border)}
+.step:last-child::after{display:none}
+.num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;z-index:1}
+.step h4{font-weight:700;margin-bottom:2px;font-size:.95rem}
+.step p{color:var(--text2);font-size:.85rem}
+.col-l{border-left:3px solid}
+.tag{display:inline-block;background:var(--card2);padding:2px 8px;border-radius:5px;font-size:.7rem;color:var(--text3);border:1px solid var(--border);margin:2px}
+.svc-hdr{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.svc-icon{font-size:2.5rem}
+.svc-meta .nm{font-size:1.3rem;font-weight:800}
+.svc-meta .pt{color:var(--accent2);font-size:.85rem;font-weight:600}
+.hl{background:var(--card2);padding:16px;border-radius:10px;margin:12px 0}
+.fade-up{opacity:0;transform:translateY(20px);transition:.5s}.fade-up.v{opacity:1;transform:translateY(0)}
+.nav-bar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,26,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:10px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:800;font-size:1.1rem;background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:6px;flex-wrap:wrap}
+.nav-links a{color:var(--text3);text-decoration:none;font-size:.72rem;padding:4px 10px;border-radius:6px;transition:.2s;font-weight:500}
+.nav-links a:hover{color:var(--text);background:var(--card)}
+@media(max-width:768px){.g2,.g3,.g4{grid-template-columns:1fr}.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="nav-bar"><div class="ctr nav-inner"><span class="nav-logo">NexPay HLD</span><div class="nav-links">
+<a href="#s1">Overview</a><a href="#s2">Architecture</a><a href="#s3">Auth</a><a href="#s4">UserKYC</a><a href="#s5">Wallet</a><a href="#s6">Transaction</a><a href="#s7">Rewards</a><a href="#s8">Notification</a><a href="#s9">Admin</a><a href="#s10">Integration</a><a href="#s11">Gateway</a><a href="#s12">Infra</a><a href="#s13">Patterns</a><a href="#s14">Security</a><a href="#s15">Deploy</a>
+</div></div></nav>
+
+<section class="hero" id="top" style="padding-top:80px">
+<div class="ctr">
+  <div class="badges"><span class="badge">☕ Java 17</span><span class="badge">🍃 Spring Boot 3.3.2</span><span class="badge">☁️ Spring Cloud 2023.0.3</span><span class="badge">🅰️ Angular 18</span><span class="badge">🐳 Docker</span><span class="badge">☁️ AWS EC2</span></div>
+  <h1>NexPay Payment & Reward System</h1>
+  <p class="sub">Capgemini Java Full-Stack — 11 Microservices, 22 Docker Containers, 50+ APIs, CQRS + Saga + Event-Driven Architecture — Complete Deep-Dive</p>
+  <div class="badges"><span class="badge" style="border-color:var(--green)">✅ 20 JPA Entities</span><span class="badge" style="border-color:var(--blue)">🔗 5 Feign Clients</span><span class="badge" style="border-color:var(--orange)">🐰 6 RabbitMQ Listeners</span><span class="badge" style="border-color:var(--pink)">🔐 4 User Roles</span></div>
+</div>
+</section>
+
+<!-- ===== S1: OVERVIEW ===== -->
+<section id="s1">
+<div class="ctr">
+<div class="sn fade-up">Section 01</div>
+<h2 class="st fade-up">🗺️ System Overview — Service Map</h2>
+<p class="sd fade-up">22 Docker containers — 11 microservices + 1 frontend + 10 infrastructure/observability services.</p>
+<div class="g3">
+<div class="card col-l" style="border-color:var(--accent)"><h3>⚙️ Config Server :8060</h3><p>Centralized configuration for all services. Native file-based profile. Services fetch config on startup via <code>spring.config.import</code>.</p></div>
+<div class="card col-l" style="border-color:var(--accent)"><h3>📋 Eureka Server :8061</h3><p>Service Discovery & Registry. All services register here. Gateway uses <code>lb://service-name</code> for routing.</p></div>
+<div class="card col-l" style="border-color:var(--orange)"><h3>🚪 API Gateway :8062</h3><p>Single entry point. Spring Cloud Gateway with JWT validation, CORS, Rate Limiting (Redis), path-based routing to all services.</p></div>
+<div class="card col-l" style="border-color:var(--green)"><h3>🔐 Auth Service :8063</h3><p>Signup, Login, JWT generation, OTP management. BCrypt password hashing with legacy migration.</p></div>
+<div class="card col-l" style="border-color:var(--green)"><h3>👤 User-KYC :8064</h3><p>User profile CRUD, KYC submit (text + file upload), External KYC verification via Integration Service.</p></div>
+<div class="card col-l" style="border-color:var(--blue)"><h3>💰 Wallet Service :8065</h3><p>Balance management, Direct topup, Payment gateway topup, P2P transfer, Ledger entries, Daily limits. <strong>CQRS + Redis + Idempotency.</strong></p></div>
+<div class="card col-l" style="border-color:var(--pink)"><h3>🎁 Rewards :8066</h3><p>Points management, Tier system (SILVER/GOLD/PLATINUM), Catalog items, Redeem, Rule engine, Merchant items.</p></div>
+<div class="card col-l" style="border-color:var(--orange)"><h3>👑 Admin :8067</h3><p>KYC approval (via Feign→User-KYC), Campaign CRUD with activate/deactivate, Dashboard analytics.</p></div>
+<div class="card col-l" style="border-color:var(--blue)"><h3>💸 Transaction :8068</h3><p>Topup/Transfer/Payment/Refund recording, <strong>Saga orchestration</strong>, Dispute management, PDF receipt, CSV/PDF statements. <strong>CQRS + Idempotency.</strong></p></div>
+<div class="card col-l" style="border-color:var(--cyan)"><h3>🔔 Notification :8069</h3><p>Multi-channel notifications (EMAIL/SMS/PUSH), Device token management, Event-driven via RabbitMQ.</p></div>
+<div class="card col-l" style="border-color:var(--cyan)"><h3>🔗 Integration :8070</h3><p>External payment gateway simulation (init/status/refund), Mock KYC document verification API.</p></div>
+<div class="card col-l" style="border-color:var(--red)"><h3>🖥️ Frontend :8051</h3><p>Angular 18 SPA with SSR + TailwindCSS. 10 modules: auth, dashboard, wallet, transactions, rewards, kyc, notifications, admin, core, shared.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ===== S2: FULL ARCHITECTURE ===== -->
+<section id="s2">
+<div class="ctr">
+<div class="sn fade-up">Section 02</div>
+<h2 class="st fade-up">🏗️ Full Architecture Diagram</h2>
+<p class="sd fade-up">Complete system architecture — Client → Gateway → Services → Data Layer → Observability.</p>
+<div class="card fade-up" style="overflow-x:auto">
+<svg viewBox="0 0 1100 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:1100px;margin:0 auto;display:block;font-family:Inter,sans-serif">
+<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4b5563"/></marker><marker id="ah-y" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f59e0b"/></marker></defs>
+<text x="20" y="25" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">CLIENT</text>
+<rect x="350" y="35" width="400" height="45" rx="10" fill="#1e293b" stroke="#ec4899" stroke-width="2"/><text x="550" y="55" text-anchor="middle" fill="#ec4899" font-size="11" font-weight="600">🖥️ Angular Frontend :8051</text><text x="550" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">Nginx + SSR + TailwindCSS</text>
+<text x="20" y="100" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">GATEWAY</text>
+<rect x="250" y="110" width="600" height="50" rx="12" fill="#f59e0b" opacity=".85"/><text x="550" y="132" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">🚪 API Gateway :8062 — JWT Auth + Rate Limiter + CORS + lb:// Routing</text><text x="550" y="148" text-anchor="middle" fill="#fef3c7" font-size="9">JwtAuthGlobalFilter → Validates token → Adds X-Authenticated-* headers → Routes to service</text>
+<line x1="550" y1="80" x2="550" y2="110" stroke="#4b5563" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="20" y="185" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">INFRASTRUCTURE</text>
+<rect x="280" y="195" width="200" height="42" rx="8" fill="#4f46e5"/><text x="380" y="214" text-anchor="middle" fill="#e0e7ff" font-size="10" font-weight="600">⚙️ Config Server :8060</text><text x="380" y="228" text-anchor="middle" fill="#c7d2fe" font-size="8">Native File Config</text>
+<rect x="620" y="195" width="200" height="42" rx="8" fill="#4f46e5"/><text x="720" y="214" text-anchor="middle" fill="#e0e7ff" font-size="10" font-weight="600">📋 Eureka Server :8061</text><text x="720" y="228" text-anchor="middle" fill="#c7d2fe" font-size="8">Service Registry</text>
+<text x="20" y="265" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">BUSINESS SERVICES</text>
+<rect x="30" y="280" width="120" height="55" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/><text x="90" y="300" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">🔐 Auth</text><text x="90" y="316" text-anchor="middle" fill="#94a3b8" font-size="8">:8063</text><text x="90" y="328" text-anchor="middle" fill="#4ade80" font-size="7">JWT+BCrypt+OTP</text>
+<rect x="165" y="280" width="120" height="55" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.5"/><text x="225" y="300" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">👤 User-KYC</text><text x="225" y="316" text-anchor="middle" fill="#94a3b8" font-size="8">:8064</text><text x="225" y="328" text-anchor="middle" fill="#4ade80" font-size="7">Profile+KYC+Upload</text>
+<rect x="300" y="280" width="120" height="55" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5"/><text x="360" y="300" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">💰 Wallet</text><text x="360" y="316" text-anchor="middle" fill="#94a3b8" font-size="8">:8065</text><text x="360" y="328" text-anchor="middle" fill="#60a5fa" font-size="7">CQRS+Redis+Ledger</text>
+<rect x="435" y="280" width="120" height="55" rx="8" fill="#0f172a" stroke="#ec4899" stroke-width="1.5"/><text x="495" y="300" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">🎁 Rewards</text><text x="495" y="316" text-anchor="middle" fill="#94a3b8" font-size="8">:8066</text><text x="495" y="328" text-anchor="middle" fill="#f472b6" font-size="7">Points+Tier+Catalog</text>
+<rect x="165" y="350" width="120" height="55" rx="8" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/><text x="225" y="370" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">👑 Admin</text><text x="225" y="386" text-anchor="middle" fill="#94a3b8" font-size="8">:8067</text><text x="225" y="398" text-anchor="middle" fill="#fbbf24" font-size="7">Campaign+KYC Mgmt</text>
+<rect x="300" y="350" width="120" height="55" rx="8" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5"/><text x="360" y="370" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">💸 Transaction</text><text x="360" y="386" text-anchor="middle" fill="#94a3b8" font-size="8">:8068</text><text x="360" y="398" text-anchor="middle" fill="#60a5fa" font-size="7">Saga+CQRS+Dispute</text>
+<rect x="435" y="350" width="120" height="55" rx="8" fill="#0f172a" stroke="#a78bfa" stroke-width="1.5"/><text x="495" y="370" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">🔔 Notification</text><text x="495" y="386" text-anchor="middle" fill="#94a3b8" font-size="8">:8069</text><text x="495" y="398" text-anchor="middle" fill="#c4b5fd" font-size="7">Email+SMS+Push</text>
+<rect x="570" y="350" width="120" height="55" rx="8" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5"/><text x="630" y="370" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">🔗 Integration</text><text x="630" y="386" text-anchor="middle" fill="#94a3b8" font-size="8">:8070</text><text x="630" y="398" text-anchor="middle" fill="#22d3ee" font-size="7">PaymentGW+KYC API</text>
+<text x="20" y="435" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">DATA LAYER</text>
+<rect x="100" y="450" width="180" height="48" rx="8" fill="#1a2236" stroke="#10b981" stroke-width="2"/><text x="190" y="472" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="600">🐘 PostgreSQL :5432</text><text x="190" y="488" text-anchor="middle" fill="#94a3b8" font-size="8">wallet_db — 20 tables</text>
+<rect x="350" y="450" width="180" height="48" rx="8" fill="#1a2236" stroke="#f59e0b" stroke-width="2"/><text x="440" y="472" text-anchor="middle" fill="#fcd34d" font-size="10" font-weight="600">🐰 RabbitMQ :5672</text><text x="440" y="488" text-anchor="middle" fill="#94a3b8" font-size="8">4 queues — Event Bus</text>
+<rect x="600" y="450" width="180" height="48" rx="8" fill="#1a2236" stroke="#ef4444" stroke-width="2"/><text x="690" y="472" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="600">⚡ Redis :6379</text><text x="690" y="488" text-anchor="middle" fill="#94a3b8" font-size="8">Cache + Idempotency</text>
+<text x="20" y="525" fill="#64748b" font-size="10" font-weight="700" letter-spacing="2">OBSERVABILITY</text>
+<rect x="50" y="540" width="140" height="35" rx="6" fill="#1a2236" stroke="#374151"/><text x="120" y="562" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">🔍 Zipkin :9411</text>
+<rect x="210" y="540" width="180" height="35" rx="6" fill="#1a2236" stroke="#374151"/><text x="300" y="562" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">📊 ELK :9200/5000/5601</text>
+<rect x="410" y="540" width="150" height="35" rx="6" fill="#1a2236" stroke="#374151"/><text x="485" y="562" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">📈 Prometheus :9090</text>
+<rect x="580" y="540" width="140" height="35" rx="6" fill="#1a2236" stroke="#374151"/><text x="650" y="562" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">📉 Grafana :3000</text>
+<rect x="740" y="540" width="150" height="35" rx="6" fill="#1a2236" stroke="#374151"/><text x="815" y="562" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">🔬 SonarQube :9000</text>
+<!-- Feign arrows (blue dashed) -->
+<text x="750" y="280" fill="#3b82f6" font-size="9" font-weight="700">Feign Calls:</text>
+<line x1="360" y1="335" x2="225" y2="350" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/><text x="280" y="340" fill="#3b82f6" font-size="7">Wallet→KYC</text>
+<line x1="360" y1="405" x2="630" y2="405" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="225" y1="405" x2="225" y2="335" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/><text x="240" y="345" fill="#3b82f6" font-size="7">Admin→KYC</text>
+<!-- RabbitMQ arrows (orange dashed animated) -->
+<text x="750" y="295" fill="#f59e0b" font-size="9" font-weight="700">RabbitMQ Events:</text>
+<line x1="360" y1="335" x2="440" y2="450" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,4"/>
+<line x1="495" y1="405" x2="440" y2="450" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,4"/>
+</svg>
+</div>
+<div class="card fade-up"><h3>📖 Architecture Explanation (Hindi)</h3><p>
+<strong>Client Layer:</strong> Angular SPA Nginx pe serve hota hai (:8051). User browser se sab API requests API Gateway pe jaati hain.<br><br>
+<strong>Gateway Layer:</strong> <code>JwtAuthGlobalFilter</code> har request pe: (1) Token extract karta hai, (2) Signature validate karta hai, (3) Role check karta hai path ke against, (4) <code>X-Authenticated-User</code>, <code>X-Authenticated-Role</code>, <code>X-Authenticated-UserId</code> headers add karta hai, (5) Correct service pe route karta hai via Eureka <code>lb://</code>.<br><br>
+<strong>Infrastructure:</strong> Config Server sab services ko startup pe config deta hai. Eureka Server services ko register/discover karata hai.<br><br>
+<strong>Business Services:</strong> 8 domain services — Auth, User-KYC, Wallet, Transaction, Rewards, Admin, Notification, Integration. Har ek apna bounded context handle karta hai.<br><br>
+<strong>Data Layer:</strong> PostgreSQL (shared DB <code>wallet_db</code>, 20 tables), RabbitMQ (4 async queues), Redis (caching + idempotency + rate limiting).<br><br>
+<strong>Observability:</strong> Zipkin (distributed tracing via Micrometer Brave), ELK Stack (centralized logging), Prometheus+Grafana (metrics via <code>/actuator/prometheus</code>), SonarQube (code quality + JaCoCo coverage).
+</p></div>
+</div>
+</section>
+
+<!-- ===== S3: AUTH SERVICE DEEP DIVE ===== -->
+<section id="s3">
+<div class="ctr">
+<div class="sn fade-up">Section 03</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">🔐</div><div class="svc-meta"><div class="nm">Auth Service — Deep Dive</div><div class="pt">Port: 8063 | Package: com.wallet.auth</div></div></div>
+<p class="sd fade-up">User registration, login, JWT token generation, OTP management. Ye service security ka backbone hai.</p>
+<div class="g2">
+<div class="card"><h3>📦 Entities (JPA Tables)</h3>
+<table><tr><th>Entity</th><th>Fields</th><th>Purpose</th></tr>
+<tr><td><code>AuthUser</code></td><td>id, username, password, role</td><td>Store user credentials + role</td></tr>
+<tr><td><code>OtpEntity</code></td><td>id, target, otp, expiry</td><td>OTP codes for verification</td></tr></table>
+</div>
+<div class="card"><h3>📡 REST Endpoints</h3>
+<table><tr><th>Method</th><th>Path</th><th>What it does</th></tr>
+<tr><td><span class="m p">POST</span></td><td><code>/api/auth/signup</code></td><td>Register user → BCrypt hash password → Save to DB</td></tr>
+<tr><td><span class="m p">POST</span></td><td><code>/api/auth/login</code></td><td>Validate creds → Generate JWT → Return token+role</td></tr>
+<tr><td><span class="m p">POST</span></td><td><code>/api/auth/otp/generate</code></td><td>Generate 6-digit OTP → Save with expiry</td></tr>
+<tr><td><span class="m p">POST</span></td><td><code>/api/auth/otp/verify</code></td><td>Verify OTP against DB</td></tr></table>
+</div>
+</div>
+<div class="card fade-up"><h3>🔄 Internal Code Flow — Login Process</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>Request Received</h4><p><code>AuthController.login(AuthRequest)</code> → Calls <code>AuthService.login()</code></p></div></div>
+<div class="step"><div class="num">2</div><div><h4>Find User</h4><p><code>repository.findByUsername()</code> → If not found → throw "Invalid credentials"</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>Password Validation</h4><p>Check if stored password is BCrypt hash (<code>startsWith("$2")</code>). If yes → <code>passwordEncoder.matches()</code>. If no (legacy plain-text) → direct string compare.</p></div></div>
+<div class="step"><div class="num">4</div><div><h4>Auto-Migration</h4><p>If password was plain-text and login successful → auto-hash with BCrypt and save. This ensures legacy users are migrated.</p></div></div>
+<div class="step"><div class="num">5</div><div><h4>Generate JWT</h4><p><code>jwtService.generateToken(user)</code> → Token contains {userId, username, role, expiry}. Returns <code>AuthResponse(token, role, "Login successful")</code></p></div></div>
+</div></div>
+<div class="card fade-up"><h3>🛡️ Signup Role Validation</h3><p>Users can only signup with roles: <code>USER</code>, <code>SUPPORT</code>, <code>MERCHANT</code>. ADMIN role cannot be self-assigned — prevents privilege escalation. Null/blank role defaults to <code>USER</code>.</p></div>
+</div>
+</section>
+
+<!-- ===== S4: USER-KYC SERVICE ===== -->
+<section id="s4">
+<div class="ctr">
+<div class="sn fade-up">Section 04</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">👤</div><div class="svc-meta"><div class="nm">User-KYC Service — Deep Dive</div><div class="pt">Port: 8064 | Package: com.wallet.userkyc</div></div></div>
+<p class="sd fade-up">User profile management + KYC document verification with file upload support.</p>
+<div class="g2">
+<div class="card"><h3>📦 Entity: UserProfile</h3>
+<table><tr><th>Field</th><th>Type</th><th>Purpose</th></tr>
+<tr><td>id, authUserId</td><td>Long</td><td>PK + link to Auth user</td></tr>
+<tr><td>fullName, email, phone</td><td>String</td><td>Profile info</td></tr>
+<tr><td>kycStatus</td><td>String</td><td>NOT_SUBMITTED → PENDING → APPROVED/REJECTED</td></tr>
+<tr><td>kycDocumentId, kycDocumentName</td><td>String</td><td>Document reference</td></tr>
+<tr><td>kycDocumentData</td><td>byte[]</td><td>Uploaded file binary (<code>@Lob</code>)</td></tr>
+<tr><td>kycDocumentContentType, kycDocumentSize</td><td>String, Long</td><td>File metadata</td></tr>
+<tr><td>kycProviderStatus, kycProviderRef</td><td>String</td><td>External verification result</td></tr></table>
+</div>
+<div class="card"><h3>🔗 Feign Clients (Outgoing)</h3>
+<table><tr><th>Target</th><th>Purpose</th></tr>
+<tr><td><code>IntegrationClient</code></td><td>External KYC verification: <code>POST /api/integrations/kyc/verify</code></td></tr>
+<tr><td><code>NotificationClient</code></td><td>Send KYC status update notification</td></tr></table>
+<h3 style="margin-top:16px">Feign Clients (Incoming — who calls this service)</h3>
+<table><tr><th>Source</th><th>Purpose</th></tr>
+<tr><td>Wallet Service</td><td>Validate user before wallet operations</td></tr>
+<tr><td>Transaction Service</td><td>Validate user before transactions</td></tr>
+<tr><td>Admin Service</td><td>KYC approval/rejection + pending list</td></tr></table>
+</div>
+</div>
+<div class="card fade-up"><h3>🔄 KYC Submission Flow (File Upload)</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>User uploads document</h4><p><code>POST /api/kyc/upload/{userId}</code> with MultipartFile. Allowed: PDF, DOC, DOCX, JPG, PNG.</p></div></div>
+<div class="step"><div class="num">2</div><div><h4>Validate document</h4><p>Check not empty, content type in allowed list. Generate unique <code>DOC-UUID</code> reference.</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>External verification</h4><p>Feign call → <code>IntegrationClient.verifyKyc()</code> → Integration Service returns VERIFIED/FAILED status.</p></div></div>
+<div class="step"><div class="num">4</div><div><h4>Save to DB</h4><p>Store file bytes (<code>@Lob</code>), metadata, provider status. Set <code>kycStatus = PENDING</code>.</p></div></div>
+<div class="step"><div class="num">5</div><div><h4>Admin reviews later</h4><p>Admin Service calls <code>PUT /api/kyc/{userId}/status</code> → Status becomes APPROVED/REJECTED. Notification sent to user.</p></div></div>
+</div></div>
+</div>
+</section>
+
+<!-- ===== S5: WALLET SERVICE ===== -->
+<section id="s5">
+<div class="ctr">
+<div class="sn fade-up">Section 05</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">💰</div><div class="svc-meta"><div class="nm">Wallet Service — Deep Dive</div><div class="pt">Port: 8065 | Package: com.wallet.wallet | Patterns: CQRS, Idempotency, Event-Driven</div></div></div>
+<p class="sd fade-up">Core financial service — balance management, topup, P2P transfer, payment gateway integration, daily limits, ledger.</p>
+<div class="g2">
+<div class="card"><h3>📦 Entities (3 tables)</h3>
+<table><tr><th>Entity</th><th>Key Fields</th></tr>
+<tr><td><code>WalletAccount</code></td><td>id, userId, balance (BigDecimal)</td></tr>
+<tr><td><code>LedgerEntry</code></td><td>id, userId, type (TOPUP/TRANSFER_DEBIT/TRANSFER_CREDIT), amount, reference (UUID), createdAt</td></tr>
+<tr><td><code>WalletLimitConfig</code></td><td>id, dailyTopupLimit (₹50,000), dailyTransferLimit (₹25,000), dailyTransferCountLimit (10)</td></tr></table>
+</div>
+<div class="card"><h3>🔗 Feign + RabbitMQ</h3>
+<p><strong>Feign Clients (Outgoing):</strong></p>
+<ul><li><code>UserClient</code> → User-KYC: Validate receiver exists for transfer</li>
+<li><code>IntegrationClient</code> → Integration: Init/Confirm payment gateway topup</li>
+<li><code>NotificationClient</code> → Notification: Send SMS+Email on topup/transfer</li></ul>
+<p style="margin-top:12px"><strong>RabbitMQ Publishing:</strong></p>
+<ul><li><code>wallet.events.queue</code> → {userId, type, amount} — consumed by Transaction + Rewards</li>
+<li><code>wallet.cqrs.events.queue</code> → CQRS cache invalidation events</li>
+<li><code>notification.queue</code> → Notification events</li></ul>
+</div>
+</div>
+<div class="card fade-up"><h3>🔄 Wallet Top-up Flow (Direct)</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>Validate Limits</h4><p>Check daily topup sum from ledger (<code>sumByUserAndTypeAndCreatedAtBetween</code>). If exceeds ₹50,000 → reject.</p></div></div>
+<div class="step"><div class="num">2</div><div><h4>Get or Create Account</h4><p><code>walletAccountRepository.findByUserId()</code>. If not found → create new with balance ₹0.</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>Update Balance</h4><p><code>balance = balance + amount</code>. Save to DB. <code>@Transactional</code> ensures atomicity.</p></div></div>
+<div class="step"><div class="num">4</div><div><h4>Create Ledger Entry</h4><p>New <code>LedgerEntry(type=TOPUP, amount, reference=UUID)</code>. Immutable audit trail.</p></div></div>
+<div class="step"><div class="num">5</div><div><h4>Publish Events</h4><p>RabbitMQ: <code>WalletEvent{userId, TOPUP, amount}</code>. Notification: SMS + EMAIL to user.</p></div></div>
+</div></div>
+<div class="card fade-up"><h3>🔄 P2P Transfer Flow</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>Validate Request</h4><p>Sender ≠ Receiver. Both IDs required. Positive amount.</p></div></div>
+<div class="step"><div class="num">2</div><div><h4>Check Limits</h4><p>Daily transfer amount limit (₹25,000). Daily transfer count limit (10). Both checked from ledger.</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>Verify Receiver</h4><p>Feign call → <code>UserClient.getUserById(toUserId)</code>. If 404 → "Receiver user not found".</p></div></div>
+<div class="step"><div class="num">4</div><div><h4>Balance Check</h4><p><code>fromAccount.balance >= amount</code>? If no → "Insufficient wallet balance".</p></div></div>
+<div class="step"><div class="num">5</div><div><h4>Execute Transfer</h4><p>Sender: <code>balance -= amount</code>. Receiver: <code>balance += amount</code>. Two ledger entries: TRANSFER_DEBIT + TRANSFER_CREDIT.</p></div></div>
+<div class="step"><div class="num">6</div><div><h4>Events + Notifications</h4><p>WalletEvent published. SMS to both sender ("Transfer successful") and receiver ("Amount received").</p></div></div>
+</div></div>
+<div class="card fade-up"><h3>🔄 Payment Gateway Top-up Flow</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>Init Payment</h4><p><code>POST /api/wallet/topup/init</code> → Feign → <code>IntegrationClient.initPayment()</code> → Returns <code>{paymentRef: "PAY-xxx", gatewayUrl}</code></p></div></div>
+<div class="step"><div class="num">2</div><div><h4>User Pays Externally</h4><p>User opens gateway URL, completes payment. Integration Service updates status to SUCCESS.</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>Confirm Payment</h4><p><code>POST /api/wallet/topup/confirm/PAY-xxx</code> → Feign → Check Integration status. If SUCCESS → topup wallet. If already CAPTURED → return existing. Mark as CAPTURED in Integration.</p></div></div>
+</div></div>
+</div>
+</section>
+
+<!-- ===== S6: TRANSACTION SERVICE ===== -->
+<section id="s6">
+<div class="ctr">
+<div class="sn fade-up">Section 06</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">💸</div><div class="svc-meta"><div class="nm">Transaction Service — Deep Dive</div><div class="pt">Port: 8068 | Package: com.wallet.transaction | Patterns: CQRS, Saga, Idempotency, Event-Driven</div></div></div>
+<p class="sd fade-up">Most complex service — handles topup/transfer/payment/refund recording, Saga orchestration, dispute management, PDF receipts, CSV/PDF statements.</p>
+<div class="g2">
+<div class="card"><h3>📦 Entities (3 tables)</h3>
+<table><tr><th>Entity</th><th>Key Fields</th></tr>
+<tr><td><code>Transaction</code></td><td>id, userId, senderId, receiverId, amount, type (TOPUP/TRANSFER/PAYMENT/REFUND), status (PENDING/SUCCESS/FAILED), idempotencyKey, createdAt</td></tr>
+<tr><td><code>LedgerEntry</code></td><td>id, transaction (FK), userId, entryType (DEBIT/CREDIT), amount</td></tr>
+<tr><td><code>Dispute</code></td><td>id, transactionId, userId, reason, status (OPEN/ESCALATED/RESOLVED), escalated, resolution</td></tr></table>
+</div>
+<div class="card"><h3>🔑 Idempotency Mechanism</h3>
+<p>Every request has an <code>idempotencyKey</code>. Before processing:</p>
+<ul><li><code>transactionRepository.findByIdempotencyKey(key)</code></li>
+<li>If found → validate same payload → return existing (no duplicate)</li>
+<li>If payload differs → throw <code>IdempotencyConflictException</code></li>
+<li>Isolation: <code>@Transactional(isolation = Isolation.SERIALIZABLE)</code></li></ul>
+</div>
+</div>
+<div class="card fade-up"><h3>🔄 Saga Pattern — Payment Flow (4 Steps + Compensation)</h3>
+<div class="hl">
+<div class="step"><div class="num" style="background:linear-gradient(135deg,#3b82f6,#2563eb)">1</div><div><h4>Step 1: CreateTransaction</h4><p>Create <code>Transaction(status=PENDING, type=PAYMENT)</code> in DB.<br><span style="color:var(--orange)">⟲ Compensate: Mark transaction as FAILED</span></p></div></div>
+<div class="step"><div class="num" style="background:linear-gradient(135deg,#10b981,#059669)">2</div><div><h4>Step 2: ValidateAndReserve</h4><p>Feign → <code>UserClient.getUserById(senderId)</code> + <code>getUserById(receiverId)</code>. Check <code>calculateBalanceForUpdate(senderId) >= amount</code>.<br><span style="color:var(--orange)">⟲ Compensate: No-op (read-only)</span></p></div></div>
+<div class="step"><div class="num" style="background:linear-gradient(135deg,#f59e0b,#d97706)">3</div><div><h4>Step 3: AccountingEntries</h4><p>Create DEBIT ledger for sender + CREDIT ledger for receiver. Mark transaction SUCCESS.<br><span style="color:var(--orange)">⟲ Compensate: Reverse ledger entries</span></p></div></div>
+<div class="step"><div class="num" style="background:linear-gradient(135deg,#ec4899,#db2777)">4</div><div><h4>Step 4: PublishRewardEvent</h4><p>Publish <code>WalletEvent</code> to RabbitMQ for reward points. Publish <code>TransactionHistoryEvent</code> for cache.<br><span style="color:var(--orange)">⟲ Compensate: Rewards rollback (logged)</span></p></div></div>
+</div>
+<p style="color:var(--text2);font-size:.85rem;margin-top:12px">❌ <strong>Failure:</strong> <code>SagaOrchestrator.compensate()</code> runs in REVERSE order — last completed step first. All exceptions logged but don't block other compensations.</p>
+</div>
+<div class="g2 fade-up">
+<div class="card"><h3>💬 Dispute Management</h3>
+<table><tr><th>API</th><th>Who</th><th>Action</th></tr>
+<tr><td><code>POST /api/disputes</code></td><td>USER</td><td>Create dispute (validates transaction exists, status=OPEN)</td></tr>
+<tr><td><code>GET /api/disputes?userId=</code></td><td>USER</td><td>List my disputes</td></tr>
+<tr><td><code>GET /api/support/disputes/open</code></td><td>SUPPORT</td><td>List all open disputes</td></tr>
+<tr><td><code>PUT /api/disputes/{id}/escalate</code></td><td>SUPPORT</td><td>Change to ESCALATED</td></tr>
+<tr><td><code>PUT /api/disputes/{id}/resolve</code></td><td>ADMIN</td><td>Set resolution text, mark RESOLVED</td></tr></table>
+</div>
+<div class="card"><h3>📄 PDF Receipt & Statement</h3>
+<ul><li><code>GET /transactions/{id}/receipt</code> → Text-based receipt with transaction details, formatted as plain-text PDF</li>
+<li><code>GET /transactions/statement?format=csv</code> → CSV with columns: ID, Date, Type, Amount, Status, SenderID, ReceiverID, Reference</li>
+<li><code>GET /transactions/statement?format=pdf</code> → Formatted text-based statement with header, table, footer. Max 90-day window.</li></ul>
+</div>
+</div>
+<div class="card fade-up"><h3>🐰 RabbitMQ Listeners (Incoming Events)</h3>
+<table><tr><th>Listener</th><th>Queue</th><th>Action</th></tr>
+<tr><td><code>WalletEventListener</code></td><td><code>wallet.events.queue</code></td><td>Receives wallet events → Records matching transaction in DB</td></tr>
+<tr><td><code>TransactionCacheInvalidationListener</code></td><td><code>transaction.events.queue</code></td><td>Evicts Redis <code>transactionHistory</code> cache when new events come</td></tr>
+<tr><td><code>TransactionHistoryEventListener</code></td><td><code>transaction.events.queue</code></td><td>Logs transaction history event for audit</td></tr></table>
+</div>
+</div>
+</section>
+
+<!-- ===== S7: REWARDS SERVICE ===== -->
+<section id="s7">
+<div class="ctr">
+<div class="sn fade-up">Section 07</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">🎁</div><div class="svc-meta"><div class="nm">Rewards Service — Deep Dive</div><div class="pt">Port: 8066 | Package: com.wallet.rewards | Event-Driven Points Engine</div></div></div>
+<p class="sd fade-up">Points earn/spend, tier system, catalog marketplace, configurable rule engine, merchant item management.</p>
+<div class="g2">
+<div class="card"><h3>📦 Entities (4 tables)</h3>
+<table><tr><th>Entity</th><th>Key Fields</th></tr>
+<tr><td><code>RewardsAccount</code></td><td>id, userId, points (int), tier (SILVER/GOLD/PLATINUM)</td></tr>
+<tr><td><code>RewardsTransaction</code></td><td>id, userId, points, type (EARN/REDEEM), reference, createdAt</td></tr>
+<tr><td><code>RewardRuleConfig</code></td><td>id, pointsPer100 (default:1), goldThreshold (1000), platinumThreshold (5000)</td></tr>
+<tr><td><code>RewardCatalogItem</code></td><td>id, merchantId, name, pointsCost, stock, rewardType, redeemCount</td></tr></table>
+</div>
+<div class="card"><h3>🏆 Tier System</h3>
+<div class="hl">
+<p><strong>SILVER:</strong> 0 - 999 points (default)<br>
+<strong>GOLD:</strong> 1000+ points (configurable threshold)<br>
+<strong>PLATINUM:</strong> 5000+ points (configurable threshold)</p>
+<p style="margin-top:8px"><strong>Points Calculation:</strong> <code>amount ÷ 100 × pointsPer100</code>. E.g., ₹500 → 5 blocks × 1 = 5 points.</p>
+<p style="margin-top:8px"><strong>Tier auto-updates</strong> on every points change (earn or redeem).</p>
+</div>
+</div>
+</div>
+<div class="card fade-up"><h3>🔄 Redeem Flow</h3>
+<div class="hl">
+<div class="step"><div class="num">1</div><div><h4>Check Stock</h4><p><code>item.getStock() > 0</code>? If no → "Reward out of stock"</p></div></div>
+<div class="step"><div class="num">2</div><div><h4>Check Points</h4><p><code>account.points >= item.pointsCost</code>? If no → "Insufficient points"</p></div></div>
+<div class="step"><div class="num">3</div><div><h4>Deduct & Update</h4><p>Points -= cost. Tier recalculated. Stock -= 1. RedeemCount += 1. RewardsTransaction(type=REDEEM) saved.</p></div></div>
+<div class="step"><div class="num">4</div><div><h4>Notify</h4><p>EMAIL + PUSH notification sent to user: "Reward redeemed: {item.name}"</p></div></div>
+</div></div>
+<div class="card fade-up"><h3>🐰 Event-Driven Point Earning</h3>
+<p><code>WalletEventListener</code> listens to <code>wallet.events.queue</code>. When wallet event received → <code>calculateEarnPoints(amount)</code> → <code>addPoints(userId, points, "EARN")</code>. Auto-updates tier.</p></div>
+</div>
+</section>
+
+<!-- ===== S8: NOTIFICATION SERVICE ===== -->
+<section id="s8">
+<div class="ctr">
+<div class="sn fade-up">Section 08</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">🔔</div><div class="svc-meta"><div class="nm">Notification Service — Deep Dive</div><div class="pt">Port: 8069 | Package: com.wallet.notification | Multi-Channel Event-Driven</div></div></div>
+<div class="g2">
+<div class="card"><h3>📦 Entities</h3>
+<table><tr><th>Entity</th><th>Fields</th></tr>
+<tr><td><code>NotificationMessage</code></td><td>id, userId, eventType, channel (EMAIL/SMS/PUSH), target, message, status (SENT/FAILED), failureReason, createdAt</td></tr>
+<tr><td><code>DeviceToken</code></td><td>id, userId, token (push notification token)</td></tr></table>
+</div>
+<div class="card"><h3>📡 How Events Come In</h3>
+<p><strong>RabbitMQ:</strong> <code>NotificationEventListener</code> listens to <code>notification.queue</code>. Multiple services publish here: Wallet, Transaction, Rewards, User-KYC.</p>
+<p style="margin-top:8px"><strong>REST (Internal):</strong> Services call <code>NotificationClient.sendSafe()</code> via Feign with <code>X-Internal-Call</code> header.</p>
+<p style="margin-top:8px"><strong>Channels:</strong> EMAIL (SMTP placeholder), SMS (Twilio placeholder), PUSH (Firebase placeholder). Currently saves to DB with status=SENT.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ===== S9: ADMIN SERVICE ===== -->
+<section id="s9">
+<div class="ctr">
+<div class="sn fade-up">Section 09</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">👑</div><div class="svc-meta"><div class="nm">Admin Service — Deep Dive</div><div class="pt">Port: 8067 | Package: com.wallet.admin | Feign → User-KYC</div></div></div>
+<div class="g2">
+<div class="card"><h3>📦 Entities</h3>
+<table><tr><th>Entity</th><th>Fields</th></tr>
+<tr><td><code>Campaign</code></td><td>id, name, ruleType, bonusPoints, startDate, endDate, active, status</td></tr>
+<tr><td><code>AdminAction</code></td><td>id, actionType (KYC_REVIEW), targetId, status, reason, createdAt</td></tr></table>
+</div>
+<div class="card"><h3>🔗 Feign Client</h3>
+<p><code>UserKycClient</code> → User-KYC Service:</p>
+<ul><li><code>pendingKyc()</code> → Get list of PENDING KYC users</li>
+<li><code>updateStatus(userId, request)</code> → Approve/Reject KYC</li></ul>
+<p style="margin-top:8px">Every KYC action is logged as <code>AdminAction(type=KYC_REVIEW)</code>.</p>
+<p style="margin-top:8px"><strong>Dashboard:</strong> Returns <code>{totalCampaigns, totalAdminActions, pendingKyc count}</code>.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ===== S10: INTEGRATION SERVICE ===== -->
+<section id="s10">
+<div class="ctr">
+<div class="sn fade-up">Section 10</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">🔗</div><div class="svc-meta"><div class="nm">Integration Service — Deep Dive</div><div class="pt">Port: 8070 | Package: com.wallet.integration | External Gateway Simulation</div></div></div>
+<div class="g2">
+<div class="card"><h3>📦 Entities</h3>
+<table><tr><th>Entity</th><th>Fields</th></tr>
+<tr><td><code>PaymentTransaction</code></td><td>id, paymentRef (PAY-UUID), userId, amount, method, status (PENDING→SUCCESS→CAPTURED/REFUNDED)</td></tr>
+<tr><td><code>KycVerification</code></td><td>id, userId, verificationRef (KYC-UUID), status (VERIFIED), providerMessage</td></tr></table>
+</div>
+<div class="card"><h3>🔄 Payment Gateway Flow</h3>
+<div class="hl">
+<p><strong>Init:</strong> Creates <code>PaymentTransaction(status=PENDING)</code>. Returns <code>{paymentRef, PENDING, gatewayUrl}</code>. Mock URL: <code>https://mock-payments.local/checkout/PAY-xxx</code></p>
+<p style="margin-top:8px"><strong>Status Update:</strong> Admin/System calls <code>PUT /payments/{ref}/status</code> to mark SUCCESS.</p>
+<p style="margin-top:8px"><strong>Refund:</strong> Only SUCCESS payments can be refunded. Reason required. Status → REFUNDED.</p>
+<p style="margin-top:8px"><strong>KYC Verify:</strong> Creates <code>KycVerification(status=VERIFIED)</code>. Returns mock verification result.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- ===== S11: API GATEWAY ===== -->
+<section id="s11">
+<div class="ctr">
+<div class="sn fade-up">Section 11</div>
+<div class="svc-hdr fade-up"><div class="svc-icon">🚪</div><div class="svc-meta"><div class="nm">API Gateway — Deep Dive</div><div class="pt">Port: 8062 | Spring Cloud Gateway | JwtAuthGlobalFilter</div></div></div>
+<div class="card fade-up"><h3>🔄 JwtAuthGlobalFilter — Request Processing Pipeline</h3>
+<div class="hl">
+<div class="step"><div class="num" style="background:var(--green)">1</div><div><h4>Check Public Path</h4><p>If path matches <code>/api/auth/**</code>, <code>/swagger-ui/**</code>, <code>/v3/api-docs/**</code>, <code>/actuator/**</code> → SKIP auth, pass through.</p></div></div>
+<div class="step"><div class="num" style="background:var(--blue)">2</div><div><h4>Extract Token</h4><p>Read <code>Authorization: Bearer {token}</code> header. If missing → 401 Unauthorized.</p></div></div>
+<div class="step"><div class="num" style="background:var(--orange)">3</div><div><h4>Validate JWT</h4><p>Parse token, verify signature with secret key, check expiry. If invalid → 401.</p></div></div>
+<div class="step"><div class="num" style="background:var(--pink)">4</div><div><h4>Role Authorization (RBAC)</h4><p>Extract role from token. Match against path permissions:<br>
+• <code>/api/admin/**</code> → only ADMIN<br>
+• <code>/api/support/**</code> → only ADMIN, SUPPORT<br>
+• <code>/api/merchant/**</code> → only ADMIN, MERCHANT<br>
+• Other paths → all authenticated roles<br>
+If role not authorized → 403 Forbidden.</p></div></div>
+<div class="step"><div class="num" style="background:var(--accent)">5</div><div><h4>Mutate Request Headers</h4><p>Add: <code>X-Authenticated-User</code>, <code>X-Authenticated-Role</code>, <code>X-Authenticated-UserId</code>. Remove original <code>Authorization</code> header. Forward to downstream service.</p></div></div>
+</div></div>
+<div class="card fade-up"><h3>📡 Route Configuration</h3>
+<table><tr><th>Path Pattern</th><th>Target Service</th></tr>
+<tr><td><code>/api/auth/**</code></td><td>lb://auth-service :8063</td></tr>
+<tr><td><code>/api/users/**, /api/kyc/**</code></td><td>lb://user-kyc-service :8064</td></tr>
+<tr><td><code>/api/wallet/**</code></td><td>lb://wallet-service :8065</td></tr>
+<tr><td><code>/api/rewards/**</code></td><td>lb://rewards-service :8066</td></tr>
+<tr><td><code>/api/admin/**, /api/campaigns/**</code></td><td>lb://admin-service :8067</td></tr>
+<tr><td><code>/transactions/**, /api/transactions/**, /api/disputes/**</code></td><td>lb://transaction-service :8068</td></tr>
+<tr><td><code>/api/notifications/**</code></td><td>lb://notification-service :8069</td></tr>
+<tr><td><code>/api/integrations/**</code></td><td>lb://integration-service :8070</td></tr></table>
+</div>
+</div>
+</section>
+
+<!-- ===== S12: INFRA + OBSERVABILITY ===== -->
+<section id="s12">
+<div class="ctr">
+<div class="sn fade-up">Section 12</div>
+<h2 class="st fade-up">📊 Infrastructure & Observability</h2>
+<div class="g2 fade-up">
+<div class="card"><h3>🐘 PostgreSQL</h3><p>Port: 5432. Shared DB: <code>wallet_db</code>. 20 JPA entities across 8 services. Each service creates its own tables via Hibernate <code>ddl-auto: update</code>.</p></div>
+<div class="card"><h3>🐰 RabbitMQ</h3><p>Port: 5672 (AMQP), 15672 (Management UI). 4 queues: <code>wallet.events.queue</code>, <code>notification.queue</code>, <code>transaction.events.queue</code>, <code>wallet.cqrs.events.queue</code>. 6 listeners across 4 services.</p></div>
+<div class="card"><h3>⚡ Redis</h3><p>Port: 6379. Used for: (1) Gateway rate limiting, (2) Wallet CQRS read-model cache, (3) Transaction history cache (<code>@Cacheable</code>), (4) Idempotency keys (<code>setIfAbsent</code>).</p></div>
+<div class="card"><h3>🔍 Zipkin</h3><p>Port: 9411. Distributed tracing via Micrometer Brave. All services export trace spans. See request flow across services.</p></div>
+<div class="card"><h3>📊 ELK Stack</h3><p>Elasticsearch: 9200 (log storage). Logstash: 5000/5044 (log ingestion). Kibana: 5601 (log visualization). All service logs centralized.</p></div>
+<div class="card"><h3>📈 Prometheus + Grafana</h3><p>Prometheus: 9090 (scrapes <code>/actuator/prometheus</code> from all 11 services every 15s). Grafana: 3000 (dashboards for metrics).</p></div>
+<div class="card"><h3>🔬 SonarQube</h3><p>Port: 9000. Code quality analysis. JaCoCo 0.8.12 for test coverage reports. Multi-module Maven project scanned together.</p></div>
+<div class="card"><h3>⚙️ Config Server</h3><p>Port: 8060. Native file config. Services fetch on startup: <code>spring.config.import=configserver:http://config-server:8060</code>. Profile: docker.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ===== S13: DESIGN PATTERNS ===== -->
+<section id="s13">
+<div class="ctr">
+<div class="sn fade-up">Section 13</div>
+<h2 class="st fade-up">🧩 Design Patterns Summary</h2>
+<div class="g3 fade-up">
+<div class="card col-l" style="border-color:var(--blue)"><h3>CQRS</h3><p>Wallet + Transaction: Separate Command/Query controllers. Writes → PostgreSQL. Reads → Redis cache. Cache invalidated via RabbitMQ events.</p></div>
+<div class="card col-l" style="border-color:var(--pink)"><h3>Saga (Orchestration)</h3><p>Transaction Service: <code>SagaOrchestrator&lt;PaymentSagaContext&gt;</code>. 4 steps with compensation. Reverse-order rollback on failure.</p></div>
+<div class="card col-l" style="border-color:var(--orange)"><h3>Event-Driven</h3><p>RabbitMQ: 4 queues, 6 listeners. Wallet events trigger Rewards+Transaction+Notification processing asynchronously.</p></div>
+<div class="card col-l" style="border-color:var(--green)"><h3>API Gateway</h3><p>Spring Cloud Gateway: Single entry, JWT auth, CORS, rate limiting, path-based routing via Eureka lb://.</p></div>
+<div class="card col-l" style="border-color:var(--cyan)"><h3>Idempotency</h3><p>Redis <code>setIfAbsent</code> + DB idempotencyKey check. Prevents duplicate financial operations.</p></div>
+<div class="card col-l" style="border-color:var(--accent)"><h3>Service Discovery</h3><p>Netflix Eureka: Dynamic registration. No hardcoded URLs. Load-balanced routing.</p></div>
+</div>
+</div>
+</section>
+
+<!-- ===== S14: SECURITY ===== -->
+<section id="s14">
+<div class="ctr">
+<div class="sn fade-up">Section 14</div>
+<h2 class="st fade-up">🔐 Security Architecture</h2>
+<div class="card fade-up"><h3>JWT Authentication Flow</h3>
+<div class="hl">
+<div class="step"><div class="num" style="background:var(--green)">1</div><div><h4>Login → Get JWT</h4><p>User sends credentials → Auth Service validates → Returns JWT with {userId, username, role, expiry}</p></div></div>
+<div class="step"><div class="num" style="background:var(--blue)">2</div><div><h4>Frontend stores token</h4><p>Angular saves JWT in localStorage. Every API call has <code>Authorization: Bearer &lt;token&gt;</code></p></div></div>
+<div class="step"><div class="num" style="background:var(--orange)">3</div><div><h4>Gateway validates</h4><p>JwtAuthGlobalFilter extracts, validates signature, checks role authorization for path</p></div></div>
+<div class="step"><div class="num" style="background:var(--pink)">4</div><div><h4>Headers forwarded</h4><p>X-Authenticated-User/Role/UserId added. Downstream service reads these headers.</p></div></div>
+</div></div>
+<div class="card fade-up"><h3>👥 RBAC — 4 Roles</h3>
+<table><tr><th>Role</th><th>Can Access</th><th>Cannot Access</th></tr>
+<tr><td style="color:var(--green);font-weight:700">USER</td><td>wallet, transactions, rewards, kyc, notifications</td><td>admin, support paths</td></tr>
+<tr><td style="color:var(--orange);font-weight:700">ADMIN</td><td>Everything + admin/**, disputes/resolve</td><td>—</td></tr>
+<tr><td style="color:var(--cyan);font-weight:700">SUPPORT</td><td>USER paths + support/**, disputes/escalate</td><td>admin paths</td></tr>
+<tr><td style="color:var(--pink);font-weight:700">MERCHANT</td><td>USER paths + merchant/**, rewards/merchant/**</td><td>admin, support paths</td></tr></table>
+</div>
+</div>
+</section>
+
+<!-- ===== S15: DEPLOYMENT ===== -->
+<section id="s15" style="border-bottom:none">
+<div class="ctr">
+<div class="sn fade-up">Section 15</div>
+<h2 class="st fade-up">☁️ Deployment Architecture</h2>
+<div class="g2 fade-up">
+<div class="card"><h3>🏗️ Terraform → AWS</h3>
+<ul><li>Provider: AWS ~5.0, Region: configurable</li>
+<li>EC2: Ubuntu 22.04, gp3 EBS, auto SSH key (RSA 4096)</li>
+<li>Security Group: Ports 22, 5432, 8051-8070, 15672</li>
+<li>User-data script auto-installs Docker + deploys compose</li></ul>
+</div>
+<div class="card"><h3>🐳 Docker Compose</h3>
+<ul><li>22 containers in single <code>docker-compose.yml</code></li>
+<li>Docker Hub: <code>shashwattech/capgemini_javafullstack_done</code></li>
+<li>Health checks + <code>depends_on: condition: service_healthy</code></li>
+<li>Startup: PG+RMQ+Redis → Config → Eureka → Gateway + Services → Monitoring → Frontend</li></ul>
+</div>
+</div>
+<div class="card fade-up"><h3>🛠️ Complete Tech Stack</h3>
+<table><tr><th>Layer</th><th>Technology</th><th>Version</th></tr>
+<tr><td>Language</td><td>Java</td><td>17</td></tr>
+<tr><td>Backend</td><td>Spring Boot</td><td>3.3.2</td></tr>
+<tr><td>Cloud</td><td>Spring Cloud</td><td>2023.0.3</td></tr>
+<tr><td>Gateway</td><td>Spring Cloud Gateway</td><td>—</td></tr>
+<tr><td>Discovery</td><td>Netflix Eureka</td><td>—</td></tr>
+<tr><td>Config</td><td>Spring Cloud Config</td><td>Native</td></tr>
+<tr><td>Inter-service</td><td>OpenFeign</td><td>—</td></tr>
+<tr><td>Messaging</td><td>RabbitMQ</td><td>Latest</td></tr>
+<tr><td>Cache</td><td>Redis</td><td>7 Alpine</td></tr>
+<tr><td>Database</td><td>PostgreSQL</td><td>15+</td></tr>
+<tr><td>ORM</td><td>Spring Data JPA / Hibernate</td><td>—</td></tr>
+<tr><td>Security</td><td>JWT (jjwt) + BCrypt</td><td>—</td></tr>
+<tr><td>Tracing</td><td>Micrometer + Brave + Zipkin</td><td>—</td></tr>
+<tr><td>Monitoring</td><td>Prometheus + Grafana</td><td>—</td></tr>
+<tr><td>Logging</td><td>ELK Stack</td><td>7.17.16</td></tr>
+<tr><td>Code Quality</td><td>SonarQube + JaCoCo</td><td>9.9 / 0.8.12</td></tr>
+<tr><td>Frontend</td><td>Angular + TailwindCSS + SCSS</td><td>18</td></tr>
+<tr><td>Container</td><td>Docker + Docker Compose</td><td>—</td></tr>
+<tr><td>IaC</td><td>Terraform (AWS)</td><td>~5.0</td></tr>
+<tr><td>Build</td><td>Maven (Multi-module)</td><td>—</td></tr>
+<tr><td>API Docs</td><td>SpringDoc OpenAPI / Swagger</td><td>—</td></tr></table>
+</div>
+</div>
+</section>
+
+<footer style="padding:48px 0;text-align:center;border-top:1px solid var(--border)">
+<div class="ctr">
+<p style="font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent">NexPay — Capgemini Java Full Stack</p>
+<p style="color:var(--text3);margin-top:6px">11 Microservices • 22 Containers • 50+ APIs • 20 Entities • CQRS + Saga + Event-Driven</p>
+<p style="color:var(--text3);margin-top:4px;font-size:.82rem">Designed by Shashwat | Capgemini JFS Program</p>
+</div>
+</footer>
+
+<script>
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('v')})},{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
