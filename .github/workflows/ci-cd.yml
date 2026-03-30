@@ -180,7 +180,7 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.ssh
           KEY_CONTENT='${{ secrets.SSH_PRIVATE_KEY }}'
-          HOST='${{ secrets.EC2_PUBLIC_IP }}'
+          HOST=$(echo '${{ secrets.EC2_PUBLIC_IP }}' | xargs)
 
           if [ -z "$KEY_CONTENT" ]; then
             echo "SSH_PRIVATE_KEY secret is empty"
@@ -215,7 +215,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
 
           retry_ssh() {
@@ -250,7 +250,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          HOST="${{ secrets.EC2_PUBLIC_IP }}"
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o ServerAliveInterval=15 -o ServerAliveCountMax=6 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
           for i in 1 2 3 4 5; do
             if ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
@@ -294,21 +294,25 @@ jobs:
 
       - name: Verify Deployment
         run: |
+          set -euo pipefail
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
           echo "✅ Deployment completed!"
           echo ""
           echo "Service URLs:"
-          echo "  Frontend:       http://${{ secrets.EC2_PUBLIC_IP }}:8051"
-          echo "  Eureka:         http://${{ secrets.EC2_PUBLIC_IP }}:8061"
-          echo "  Swagger:        http://${{ secrets.EC2_PUBLIC_IP }}:8062/swagger-ui.html"
-          echo "  Config Server:  http://${{ secrets.EC2_PUBLIC_IP }}:8060"
-          echo "  RabbitMQ:       http://${{ secrets.EC2_PUBLIC_IP }}:15672"
+          echo "  Frontend:       http://${HOST}:8051"
+          echo "  Eureka:         http://${HOST}:8061"
+          echo "  Swagger:        http://${HOST}:8062/swagger-ui.html"
+          echo "  Config Server:  http://${HOST}:8060"
+          echo "  RabbitMQ:       http://${HOST}:15672"
 
       - name: Collect diagnostics on failure
         if: failure()
         shell: bash
         run: |
+          set -euo pipefail
+          HOST=$(echo "${{ secrets.EC2_PUBLIC_IP }}" | xargs)
           SSH_OPTS="-i $HOME/.ssh/deploy_key -o ConnectTimeout=30 -o ConnectionAttempts=3 -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o StrictHostKeyChecking=accept-new"
-          ssh $SSH_OPTS ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          ssh $SSH_OPTS ubuntu@"$HOST" << 'EOF'
           set +e
           cd /home/ubuntu/app
           sudo docker compose ps
